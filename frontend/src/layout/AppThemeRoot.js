@@ -496,33 +496,53 @@ const AppThemeRoot = ({ children }) => {
                   fontFamily: PREMIUM_FONT_FAMILY,
                   fontWeight: 400,
                 },
-                // Labels e bordas em Modais (Drawer/Dialog)
+                // Labels e bordas em Modais (Drawer/Dialog) — sempre legíveis
                 ".MuiDrawer-paper .MuiFormLabel-root, .MuiDialog-paper .MuiFormLabel-root, .MuiDrawer-paper .MuiInputLabel-root, .MuiDialog-paper .MuiInputLabel-root": {
-                  color: mode === "light" ? "#000" : "#e4e4e7",
+                  color: mode === "light" ? "#000" : "#E5E7EB",
                   fontWeight: 400,
                   textTransform: "none",
                   fontSize: "13px"
                 },
+                ".MuiDrawer-paper .MuiTypography-root, .MuiDialog-paper .MuiTypography-root": {
+                  color: mode === "light" ? undefined : "#FFFFFF",
+                },
+                ".MuiDrawer-paper .MuiTypography-colorTextSecondary, .MuiDialog-paper .MuiTypography-colorTextSecondary, .MuiDrawer-paper .MuiTypography-caption, .MuiDialog-paper .MuiTypography-caption": {
+                  color: mode === "light" ? undefined : "#E5E7EB !important",
+                },
+                ".MuiDrawer-paper .MuiIconButton-root, .MuiDialog-paper .MuiIconButton-root, .MuiDrawer-paper .MuiSvgIcon-root, .MuiDialog-paper .MuiSvgIcon-root": {
+                  color: mode === "light" ? undefined : "#FFFFFF",
+                },
+                ".MuiDrawer-paper .MuiButton-outlined, .MuiDialog-paper .MuiButton-outlined": {
+                  color: mode === "light" ? undefined : "#FFFFFF",
+                  borderColor: mode === "light" ? undefined : "rgba(255,255,255,0.28)",
+                },
+                ".MuiDrawer-paper .MuiButton-text, .MuiDialog-paper .MuiButton-text": {
+                  color: mode === "light" ? undefined : "#E5E7EB",
+                },
                 ".MuiDrawer-paper .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline, .MuiDialog-paper .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline": {
                   borderColor:
-                    mode === "light" ? "#E5E7EB" : "rgba(255, 255, 255, 0.12)",
+                    mode === "light" ? "#E5E7EB" : "rgba(255, 255, 255, 0.22)",
                   borderWidth: "1px"
                 },
                 ".MuiDrawer-paper .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline, .MuiDialog-paper .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": {
                   borderColor:
-                    mode === "light" ? "#E5E7EB" : "rgba(255, 255, 255, 0.12)",
+                    mode === "light" ? "#E5E7EB" : "rgba(255, 255, 255, 0.35)",
                   borderWidth: "1px",
                   boxShadow: "none"
                 },
                 ".MuiDrawer-paper .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline, .MuiDialog-paper .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline": {
                   borderColor:
-                    mode === "light" ? "#E5E7EB" : "rgba(255, 255, 255, 0.16)"
+                    mode === "light" ? "#E5E7EB" : "rgba(255, 255, 255, 0.3)"
                 },
                 ".MuiDrawer-paper .MuiSelect-root, .MuiDialog-paper .MuiSelect-root, .MuiDrawer-paper .MuiInputBase-input, .MuiDialog-paper .MuiInputBase-input": {
-                  color: mode === "light" ? "rgba(0, 0, 0, 0.87)" : "#f4f4f5"
+                  color: mode === "light" ? "rgba(0, 0, 0, 0.87)" : "#FFFFFF"
                 },
                 ".MuiDrawer-paper .MuiFormHelperText-root, .MuiDialog-paper .MuiFormHelperText-root": {
-                  color: mode === "light" ? "rgba(0, 0, 0, 0.6)" : "rgba(255, 255, 255, 0.65)"
+                  color: mode === "light" ? "rgba(0, 0, 0, 0.6)" : "#E5E7EB"
+                },
+                ".MuiDrawer-paper option, .MuiDialog-paper option": {
+                  backgroundColor: mode === "light" ? "#fff" : "#3a3a3a",
+                  color: mode === "light" ? "#111" : "#FFFFFF",
                 },
                 ".MuiDrawer-root > .MuiBackdrop-root": {
                   backgroundColor: 'rgba(0, 0, 0, 0.5)',

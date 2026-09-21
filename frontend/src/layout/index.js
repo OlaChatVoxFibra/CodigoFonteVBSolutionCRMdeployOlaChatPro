@@ -224,9 +224,9 @@ const useStyles = makeStyles((theme) => {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    padding: "4px 6px",
-    height: "52px",
-    minHeight: "52px",
+    padding: "6px 8px",
+    height: "64px",
+    minHeight: "64px",
     backgroundColor:
       theme.palette.sidebarMenuBackground || theme.palette.background.paper,
     transition: "all 0.3s ease",
@@ -501,8 +501,8 @@ const useStyles = makeStyles((theme) => {
   logo: {
     width: "auto",
     height: "auto",
-    maxHeight: "56px",
-    maxWidth: "min(100%, 150px)",
+    maxHeight: "72px",
+    maxWidth: "min(100%, 188px)",
     objectFit: "contain",
     objectPosition: "center",
     transition: "opacity 0.15s ease",
@@ -513,10 +513,10 @@ const useStyles = makeStyles((theme) => {
   },
 
   logoCollapsed: {
-    width: "28px",
-    height: "28px",
-    maxWidth: "28px",
-    maxHeight: "28px",
+    width: "34px",
+    height: "34px",
+    maxWidth: "34px",
+    maxHeight: "34px",
     margin: "0 auto",
     objectFit: "contain",
   },

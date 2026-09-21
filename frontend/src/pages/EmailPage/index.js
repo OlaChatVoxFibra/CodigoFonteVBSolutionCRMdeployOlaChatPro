@@ -1411,12 +1411,45 @@ const EmailPage = () => {
     >
       <div className={classes.content}>
         {smtpChecked && !smtpOk && (
-          <Paper style={{ padding: 12, border: "1px solid #FCA5A5", background: "#FEF2F2", color: "#7F1D1D", borderRadius: 8, marginBottom: 12 }}>
+          <Paper
+            style={{
+              padding: 12,
+              border:
+                theme.palette.type === "dark"
+                  ? "1px solid rgba(248, 113, 113, 0.45)"
+                  : "1px solid #FCA5A5",
+              background:
+                theme.palette.type === "dark"
+                  ? "rgba(127, 29, 29, 0.35)"
+                  : "#FEF2F2",
+              color: theme.palette.type === "dark" ? "#FECACA" : "#7F1D1D",
+              borderRadius: 8,
+              marginBottom: 12,
+            }}
+          >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
-              <Typography variant="body2" style={{ fontWeight: 600 }}>
+              <Typography
+                variant="body2"
+                style={{
+                  fontWeight: 600,
+                  color: theme.palette.type === "dark" ? "#FEE2E2" : "#7F1D1D",
+                }}
+              >
                 Nenhuma configuração SMTP encontrada. Configure em Configurações › Email para habilitar envios.
               </Typography>
-              <Button size="small" variant="outlined" onClick={() => history.push("/settings?tab=email")}>
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => history.push("/settings?tab=email")}
+                style={{
+                  color: theme.palette.type === "dark" ? "#FEE2E2" : "#7F1D1D",
+                  borderColor:
+                    theme.palette.type === "dark"
+                      ? "rgba(254, 226, 226, 0.5)"
+                      : "#FCA5A5",
+                  flexShrink: 0,
+                }}
+              >
                 Abrir Configurações
               </Button>
             </div>

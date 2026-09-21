@@ -89,7 +89,23 @@ const SIDEBAR_BOTTOM_ICON_COL = 30;
 /** Margem lateral — fundo cinza não encosta na borda do menu. */
 const SIDEBAR_ITEM_INSET_X = 6;
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles((theme) => {
+  /** Menu lateral OlaChat Pro é sempre escuro (#0F2760) → contraste claro */
+  const sidebarDark = !!theme.palette.sidebarMenuIsDarkLogo;
+  const textOnSidebar = sidebarDark ? "#FFFFFF" : theme.palette.sidebarMenuTextPrimary;
+  const textOnSidebarMuted = sidebarDark
+    ? "#E5E7EB"
+    : theme.palette.sidebarMenuTextSecondary;
+  const hoverText = sidebarDark ? "#FFFFFF" : "rgba(0, 0, 0, 0.72)";
+  const activeText = sidebarDark ? "#FFFFFF" : "rgba(0, 0, 0, 0.78)";
+  const activeBg = sidebarDark
+    ? "rgba(255, 255, 255, 0.12)"
+    : "rgba(0, 0, 0, 0.05)";
+  const hoverBg =
+    theme.palette.sidebarMenuItemHoverBg ||
+    (sidebarDark ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.04)");
+
+  return {
   sidebarList: {
     width: "100%",
     boxSizing: "border-box",
@@ -178,20 +194,14 @@ const useStyles = makeStyles((theme) => ({
       alignItems: "center",
     },
     "&:hover $iconSlot": {
-      color:
-        theme.mode === "dark"
-          ? theme.palette.sidebarMenuHoverAccent
-          : "rgba(0, 0, 0, 0.72)",
+      color: hoverText,
     },
     "&:hover $listItemText": {
-      color:
-        theme.mode === "dark"
-          ? "rgba(245, 245, 250, 0.92)"
-          : "rgba(0, 0, 0, 0.72)",
+      color: hoverText,
       fontWeight: 300,
     },
     "&:hover": {
-      backgroundColor: theme.palette.sidebarMenuItemHoverBg,
+      backgroundColor: hoverBg,
     },
     transition: "background-color 0.15s ease, color 0.15s ease",
     justifyContent: props => props.collapsed ? "center" : "flex-start", // Centraliza o conteúdo se colapsado
@@ -223,24 +233,18 @@ const useStyles = makeStyles((theme) => ({
   },
 
   listItemActive: {
-    backgroundColor:
-      theme.mode === "dark"
-        ? "rgba(255, 255, 255, 0.07)"
-        : "rgba(0, 0, 0, 0.05)",
+    backgroundColor: activeBg,
     boxShadow: "none",
     borderRadius: 8,
     "& $listItemText": {
-      color:
-        theme.mode === "dark"
-          ? "rgba(248, 248, 252, 0.98)"
-          : "rgba(0, 0, 0, 0.78)",
-      fontWeight: theme.mode === "dark" ? 400 : 500,
+      color: `${activeText} !important`,
+      fontWeight: 500,
     },
     "& $iconSlot": {
-      color:
-        theme.mode === "dark"
-          ? "rgba(248, 248, 252, 0.98)"
-          : "rgba(0, 0, 0, 0.78)",
+      color: `${activeText} !important`,
+    },
+    "& .MuiListItemText-primary": {
+      color: `${activeText} !important`,
     },
   },
 
@@ -261,7 +265,7 @@ const useStyles = makeStyles((theme) => ({
   listItemText: {
     fontSize: "10.5px !important",
     lineHeight: `${SIDEBAR_ITEM_H}px !important`,
-    color: theme.palette.sidebarMenuTextPrimary,
+    color: textOnSidebar,
     transition: "color 0.15s ease",
     fontWeight: 400,
     fontFamily:
@@ -285,7 +289,7 @@ const useStyles = makeStyles((theme) => ({
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,
-    color: theme.palette.sidebarMenuIcon,
+    color: sidebarDark ? "#FFFFFF" : theme.palette.sidebarMenuIcon,
   },
 
   iconSlot: {
@@ -361,7 +365,7 @@ const useStyles = makeStyles((theme) => ({
   versionContainer: {
     textAlign: "center",
     padding: "10px",
-    color: theme.palette.sidebarMenuTextSecondary,
+    color: textOnSidebarMuted,
     fontSize: "12px",
     fontWeight: 300,
     borderTop: `1px solid ${theme.palette.divider}`,
@@ -370,7 +374,7 @@ const useStyles = makeStyles((theme) => ({
 
   adminSection: {
     "& .MuiListSubheader-root": {
-      color: theme.palette.sidebarMenuTextSecondary,
+      color: textOnSidebarMuted,
       fontSize: "0.875rem",
       fontWeight: 300,
       textTransform: "uppercase",
@@ -399,11 +403,12 @@ const useStyles = makeStyles((theme) => ({
       backgroundColor: "transparent",
     },
     "&::-webkit-scrollbar-thumb": {
-      backgroundColor: theme.palette.type === "dark" ? "rgba(255,255,255,0.4)" : "rgba(148, 163, 184, 0.6)",
+      backgroundColor: sidebarDark ? "rgba(255,255,255,0.4)" : "rgba(148, 163, 184, 0.6)",
       borderRadius: 2,
     },
   },
-}));
+  };
+});
 
 function ListItemLink(props) {
   const { icon, primary, to, tooltip, showBadge, bottom, submenu, isBottomPrimary } = props;
@@ -413,10 +418,10 @@ function ListItemLink(props) {
   const { activeMenu } = useActiveMenu();
   const location = useLocation();
   const isActive = activeMenu === to || location.pathname === to;
+  const sidebarDark = !!muiTheme.palette.sidebarMenuIsDarkLogo;
   const iconColor = isActive
-    ? muiTheme.palette.sidebarMenuHoverAccent ||
-      muiTheme.palette.sidebarMenuIcon
-    : muiTheme.palette.sidebarMenuIcon;
+    ? (sidebarDark ? "#FFFFFF" : (muiTheme.palette.sidebarMenuHoverAccent || muiTheme.palette.sidebarMenuIcon))
+    : (sidebarDark ? "#FFFFFF" : muiTheme.palette.sidebarMenuIcon);
 
   const renderIcon = () => {
     if (!React.isValidElement(icon)) return icon;

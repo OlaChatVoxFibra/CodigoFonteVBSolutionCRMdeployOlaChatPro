@@ -20,70 +20,97 @@ import { Close as CloseIcon, Add as AddIcon, DeleteOutline as DeleteOutlineIcon 
 import DragIndicatorIcon from "@material-ui/icons/DragIndicator";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 
-const useStyles = makeStyles((theme) => ({
-  drawerPaper: {
-    width: 420,
-    maxWidth: "100%",
-    padding: theme.spacing(2),
-    borderRadius: 16,
-    marginTop: theme.spacing(2),
-    marginBottom: theme.spacing(2),
-    height: "calc(100% - 32px)",
-    marginRight: theme.spacing(2),
-    overflow: "hidden",
-    overflowX: "hidden",
-  },
-  header: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    position: "relative",
-    borderBottom: "1px solid #eee",
-    paddingBottom: theme.spacing(2),
-    marginBottom: theme.spacing(2),
-  },
-  closeButton: {
-    position: "absolute",
-    left: 0,
-  },
-  content: {
-    display: "flex",
-    flexDirection: "column",
-    gap: theme.spacing(1.5),
-    overflowY: "auto",
-    height: "100%",
-    paddingRight: theme.spacing(1),
-    overflowX: "hidden",
-  },
-  actions: {
-    display: "flex",
-    justifyContent: "flex-end",
-    marginTop: theme.spacing(2),
-    gap: theme.spacing(1),
-  },
-  stageRow: {
-    display: "grid",
-    gridTemplateColumns: "28px 28px 1fr auto",
-    alignItems: "center",
-    columnGap: theme.spacing(1),
-    rowGap: theme.spacing(1),
-  },
-  handleBox: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    cursor: "grab",
-    color: "#6B7280"
-  },
-  colorInput: {
-    width: 28,
-    height: 28,
-    padding: 0,
-    border: "1px solid #E5E7EB",
-    borderRadius: "50%",
-    background: "transparent",
-  },
-}));
+const useStyles = makeStyles((theme) => {
+  const isDark = theme.palette.type === "dark";
+  const textPrimary = isDark ? "#FFFFFF" : "rgba(0, 0, 0, 0.87)";
+  const textSecondary = isDark ? "#E5E7EB" : "#374151";
+  const border = isDark ? "rgba(255, 255, 255, 0.14)" : "#eee";
+  const paperBg = isDark
+    ? theme.palette.background.paper || "#3a3a3a"
+    : theme.palette.background.paper;
+
+  return {
+    drawerPaper: {
+      width: 420,
+      maxWidth: "100%",
+      padding: theme.spacing(2),
+      borderRadius: 16,
+      marginTop: theme.spacing(2),
+      marginBottom: theme.spacing(2),
+      height: "calc(100% - 32px)",
+      marginRight: theme.spacing(2),
+      overflow: "hidden",
+      overflowX: "hidden",
+      backgroundColor: paperBg,
+      color: textPrimary,
+    },
+    header: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      position: "relative",
+      borderBottom: `1px solid ${border}`,
+      paddingBottom: theme.spacing(2),
+      marginBottom: theme.spacing(2),
+      color: textPrimary,
+    },
+    closeButton: {
+      position: "absolute",
+      left: 0,
+      color: textPrimary,
+    },
+    content: {
+      display: "flex",
+      flexDirection: "column",
+      gap: theme.spacing(1.5),
+      overflowY: "auto",
+      height: "100%",
+      paddingRight: theme.spacing(1),
+      overflowX: "hidden",
+      color: textPrimary,
+    },
+    sectionLabel: {
+      color: `${textSecondary} !important`,
+      fontWeight: 500,
+    },
+    actions: {
+      display: "flex",
+      justifyContent: "flex-end",
+      marginTop: theme.spacing(2),
+      gap: theme.spacing(1),
+    },
+    stageRow: {
+      display: "grid",
+      gridTemplateColumns: "28px 28px 1fr auto",
+      alignItems: "center",
+      columnGap: theme.spacing(1),
+      rowGap: theme.spacing(1),
+    },
+    handleBox: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      cursor: "grab",
+      color: isDark ? "#E5E7EB" : "#6B7280",
+    },
+    colorInput: {
+      width: 28,
+      height: 28,
+      padding: 0,
+      border: `1px solid ${isDark ? "rgba(255,255,255,0.2)" : "#E5E7EB"}`,
+      borderRadius: "50%",
+      background: "transparent",
+    },
+    removeBtn: {
+      color: isDark ? "#FCA5A5" : "#DC2626",
+      whiteSpace: "nowrap",
+    },
+    cancelBtn: {
+      color: textPrimary,
+      borderColor: isDark ? "rgba(255,255,255,0.28)" : undefined,
+    },
+  };
+});
 
 const randomId = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
 const slug = (txt) =>
@@ -105,7 +132,7 @@ const buildApiPipelines = (pipes) =>
       id: s.id != null && /^\d+$/.test(String(s.id)) ? Number(s.id) : s.id,
       key: String(s.key || `etapa_${idx + 1}`).toLowerCase().slice(0, 120),
       label: String(s.label != null ? s.label : "Etapa").slice(0, 500),
-      color: String(s.color || "#3B82F6").slice(0, 32),
+      color: String(s.color || "#128C5A").slice(0, 32),
       order:
         s.order != null && Number.isFinite(Number(s.order))
           ? Number(s.order)
@@ -176,7 +203,7 @@ export default function PipelineDrawer({
     if (!current) return;
     const keyBase = `etapa_${current.stages.length + 1}`;
     const key = keyBase.toLowerCase().replace(/\s+/g, "_");
-    const newStage = { uid: randomId(), key, label: `Etapa ${current.stages.length + 1}`, color: "#3B82F6" };
+    const newStage = { uid: randomId(), key, label: `Etapa ${current.stages.length + 1}`, color: "#128C5A" };
     updateCurrent({ stages: [...current.stages, newStage] });
   };
 
@@ -230,13 +257,13 @@ export default function PipelineDrawer({
         <IconButton className={classes.closeButton} onClick={onClose} size="small">
           <CloseIcon />
         </IconButton>
-        <Typography variant="h6">{title}</Typography>
+        <Typography variant="h6" style={{ color: "inherit" }}>{title}</Typography>
         <div style={{ width: 30 }} />
       </Box>
       <Box className={classes.content}>
         <Grid container spacing={1}>
           <Grid item xs={12}>
-            <Typography variant="caption" style={{ color: "#374151" }}>Nova Pipeline</Typography>
+            <Typography variant="caption" className={classes.sectionLabel}>Nova Pipeline</Typography>
           </Grid>
           <Grid item xs={8}>
             <TextField
@@ -263,6 +290,7 @@ export default function PipelineDrawer({
               onClick={handleAddPipeline}
               variant="outlined"
               size="small"
+              className={classes.cancelBtn}
               style={{ minWidth: 36, padding: 6 }}
               title="Nova Pipeline"
             >
@@ -272,6 +300,7 @@ export default function PipelineDrawer({
               onClick={() => handleRemovePipeline(currentId)}
               variant="outlined"
               size="small"
+              className={classes.cancelBtn}
               style={{ minWidth: 36, padding: 6 }}
               disabled={localPipes.length <= 1}
               title="Excluir Pipeline"
@@ -294,7 +323,7 @@ export default function PipelineDrawer({
         </Grid>
         <Divider style={{ marginTop: 8, marginBottom: 8 }} />
         <Box>
-          <Typography variant="caption" style={{ color: "#374151" }}>Escolha suas Etapas</Typography>
+          <Typography variant="caption" className={classes.sectionLabel}>Escolha suas Etapas</Typography>
           <Box style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 8 }}>
             <DragDropContext onDragEnd={handleDragEnd}>
               <Droppable droppableId="pipeline-stages">
@@ -315,7 +344,7 @@ export default function PipelineDrawer({
                             <input
                               type="color"
                               className={classes.colorInput}
-                              value={st.color || "#3B82F6"}
+                              value={st.color || "#128C5A"}
                               onChange={(e) => handleStageChange(idx, "color", e.target.value)}
                               aria-label="Cor"
                             />
@@ -329,7 +358,7 @@ export default function PipelineDrawer({
                               InputLabelProps={{ style: { fontSize: 13 } }}
                               inputProps={{ style: { fontSize: 14 } }}
                             />
-                            <Button size="small" onClick={() => handleRemoveStage(st.uid || st.key)}>Remover</Button>
+                            <Button size="small" className={classes.removeBtn} onClick={() => handleRemoveStage(st.uid || st.key)}>Remover</Button>
                           </div>
                         )}
                       </Draggable>
@@ -345,7 +374,7 @@ export default function PipelineDrawer({
           </Box>
         </Box>
         <Box className={classes.actions}>
-          <Button onClick={onClose} variant="outlined" disabled={saving}>Cancelar</Button>
+          <Button onClick={onClose} variant="outlined" className={classes.cancelBtn} disabled={saving}>Cancelar</Button>
           <Button onClick={handleSave} color="primary" variant="contained" disabled={saving}>
             {saving ? "Salvando…" : "Salvar"}
           </Button>
