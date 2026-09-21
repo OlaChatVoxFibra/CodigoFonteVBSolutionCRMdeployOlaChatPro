@@ -1,5 +1,5 @@
 /**
- * Seed admin@local.dev / 123456 no Postgres (Railway ou local).
+ * Seed admin@dev.local / 123456 no Postgres (Railway ou local).
  * Uso:
  *   DATABASE_URL=... DB_SSL=true node scripts/seed-admin-local-dev.js
  */
@@ -7,11 +7,11 @@ require("dotenv").config();
 const { Client } = require("pg");
 const bcrypt = require("bcryptjs");
 
-const USER_EMAIL = "admin@local.dev";
-const USER_PASSWORD = "123456";
-const USER_NAME = "Admin Local";
-const COMPANY_NAME = "VB Solution Admin";
-const PLAN_NAME = "Admin Local Unlimited";
+const USER_EMAIL = process.env.SEED_ADMIN_EMAIL || "admin@dev.local";
+const USER_PASSWORD = process.env.SEED_ADMIN_PASSWORD || "123456";
+const USER_NAME = process.env.SEED_ADMIN_NAME || "Admin OlaChat Pro";
+const COMPANY_NAME = process.env.SEED_COMPANY_NAME || "OlaChat Pro";
+const PLAN_NAME = process.env.SEED_PLAN_NAME || "OlaChat Pro Unlimited";
 
 function dbUrl() {
   return (
@@ -214,7 +214,7 @@ async function main() {
     }
 
     await client.query("COMMIT");
-    console.log("[admin-local] OK — login: admin@local.dev / 123456 (super admin, plano ilimitado)");
+    console.log(`[admin-local] OK — login: ${USER_EMAIL} / ${USER_PASSWORD} (super admin, plano ilimitado)`);
   } catch (err) {
     await client.query("ROLLBACK").catch(() => {});
     console.error("[admin-local] Erro:", err.message || err);

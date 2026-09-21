@@ -7,7 +7,8 @@
 /** Contas admin de organização dedicada — mesma UI de Configurações que admin@admin.com, dados só da própria org. */
 export const FULL_ORG_SETTINGS_ADMIN_EMAILS = [
   "gestaovendas@gmail.com",
-  "admin@local.dev"
+  "admin@local.dev",
+  "admin@dev.local"
 ] as const;
 
 export function isFullOrgSettingsAdminEmail(email?: string | null): boolean {

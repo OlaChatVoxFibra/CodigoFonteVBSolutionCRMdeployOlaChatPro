@@ -8,6 +8,7 @@
 export const FULL_ORG_SETTINGS_ADMIN_EMAILS = [
   "gestaovendas@gmail.com",
   "admin@local.dev",
+  "admin@dev.local",
 ];
 
 /** Admin de plataforma (acesso total: Settings, Stripe, Financeiro, etc.). */
@@ -15,6 +16,7 @@ export const PLATFORM_ADMIN_EMAILS = [
   "admin@admin",
   "admin@admin.com",
   "admin@local.dev",
+  "admin@dev.local",
 ];
 
 export function isFullOrgSettingsAdminEmail(email) {

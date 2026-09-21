@@ -8,7 +8,8 @@
 export const PLATFORM_ADMIN_EMAILS = [
   "admin@admin",
   "admin@admin.com",
-  "admin@local.dev"
+  "admin@local.dev",
+  "admin@dev.local"
 ] as const;
 
 export function isPlatformAdminEmail(email?: string | null): boolean {

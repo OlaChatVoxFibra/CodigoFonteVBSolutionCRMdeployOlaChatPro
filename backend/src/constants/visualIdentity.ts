@@ -8,7 +8,8 @@
 export const VISUAL_IDENTITY_EMAIL_ALLOWLIST = [
   "contatopousadadogolfinho@gmail.com",
   "gestaovendas@gmail.com",
-  "admin@local.dev"
+  "admin@local.dev",
+  "admin@dev.local"
 ];
 
 /** Chaves persistidas em Settings ligadas ao tema / marca (cores, logos, idiomas da UI). */
