@@ -100,8 +100,19 @@ module.exports = {
         ...(webpackConfig.resolve.alias || {}),
         clsx: path.join(CLSX_ROOT, "dist/clsx.js"),
         "clsx/dist/clsx.mjs": CLSX_MJS,
-        "clsx/dist/clsx.m.js": CLSX_MJS
+        "clsx/dist/clsx.m.js": CLSX_MJS,
+        // Radix UI (ESM) + CRA webpack5: resolve explícito do JSX runtime do React 17
+        "react/jsx-runtime": path.join(
+          FRONTEND_ROOT,
+          "node_modules/react/jsx-runtime.js"
+        ),
+        "react/jsx-dev-runtime": path.join(
+          FRONTEND_ROOT,
+          "node_modules/react/jsx-dev-runtime.js"
+        )
       };
+
+      webpackConfig.resolve.fullySpecified = false;
 
       const rules = webpackConfig.module.rules || [];
       if (
@@ -111,9 +122,8 @@ module.exports = {
             r?.test?.toString?.().includes("m?js")
         )
       ) {
-        rules.push({
+        rules.unshift({
           test: /\.m?js$/,
-          include: /node_modules/,
           resolve: { fullySpecified: false }
         });
       }
