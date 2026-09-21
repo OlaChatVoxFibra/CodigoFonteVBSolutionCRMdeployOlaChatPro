@@ -1,0 +1,42 @@
+node_modules
+**/node_modules
+dist
+**/dist
+build
+**/build
+.env
+**/.env
+**/.env.railway.demo
+backend/.env.railway.demo
+.DS_Store
+coverage
+.vscode
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# pastas de backup / temporárias
+_git_push_tmp
+_merge_backup
+
+# Mídias e uploads por empresa (WhatsApp / fluxo) — não versionar (limite 100MB do GitHub)
+backend/public/company*/
+backend/tmp/brain-code/
+
+# Landing page — vídeos grandes (LFS local ausente; manter só no deploy da landing)
+VBSOLUTIONLANDINGPAGEdeploy-main/**/*.mov
+VBSOLUTIONLANDINGPAGEdeploy-main/**/*.mp4
+
+# Cursor IDE (nao faz parte do produto)
+.cursor/
+.impeccable/
+.impeccable-vendor/
+
+
+# Pastas de ferramenta / docs internas (nao produto)
+Cursor/
+.impeccable-vendor/
+.impeccable/
+docs/
+

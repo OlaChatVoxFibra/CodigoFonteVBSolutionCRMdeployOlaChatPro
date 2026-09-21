@@ -1,0 +1,228 @@
+/**
+ * Brain.AI — modais, sheets, dropdowns e inputs (Radix portaled → body).
+ * Usa tokens globais de brain-theme.css (não depende de .brain-shell).
+ */
+
+/* ─── Overlay ─── */
+.brain-dialog-overlay,
+.brain-sheet-overlay {
+  background: var(--brain-overlay) !important;
+  backdrop-filter: blur(2px);
+}
+
+/* ─── Dialog ─── */
+.brain-dialog {
+  background: var(--brain-surface) !important;
+  border: 1px solid var(--brain-border) !important;
+  color: var(--brain-text);
+  box-shadow: var(--brain-shadow-lg);
+  font-family: var(--brain-font);
+}
+
+.brain-dialog__close {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--brain-text-secondary);
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.brain-dialog__close:hover {
+  background: var(--brain-hover);
+  color: var(--brain-text);
+}
+
+.brain-dialog__header {
+  padding: 20px 20px 8px;
+}
+
+.brain-dialog__body {
+  padding: 8px 20px 12px;
+  max-height: min(70vh, 520px);
+  overflow-y: auto;
+}
+
+.brain-dialog__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--brain-border);
+}
+
+/* ─── Sheet ─── */
+.brain-sheet {
+  background: var(--brain-surface) !important;
+  border-color: var(--brain-border) !important;
+  color: var(--brain-text);
+  font-family: var(--brain-font);
+  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.12);
+}
+
+[data-theme="dark"] .brain-sheet,
+body.Mui-dark .brain-sheet {
+  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.35);
+}
+
+.brain-sheet__close {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--brain-text-secondary);
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.brain-sheet__close:hover {
+  background: var(--brain-hover);
+  color: var(--brain-text);
+}
+
+/* ─── Dropdown ─── */
+.brain-dropdown {
+  z-index: 1500;
+  min-width: 190px;
+  overflow: hidden;
+  border-radius: 10px;
+  border: 1px solid var(--brain-border);
+  background: var(--brain-surface);
+  color: var(--brain-text);
+  padding: 4px;
+  box-shadow: var(--brain-shadow-lg);
+  font-family: var(--brain-font);
+}
+
+.brain-dropdown__item {
+  position: relative;
+  display: flex;
+  cursor: pointer;
+  user-select: none;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 7px;
+  padding: 7px 10px;
+  font-size: 12px;
+  color: var(--brain-text);
+  outline: none;
+  transition: background 0.1s ease;
+}
+
+.brain-dropdown__item[data-highlighted],
+.brain-dropdown__item:focus {
+  background: var(--brain-hover);
+}
+
+.brain-dropdown__item[data-disabled] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* ─── Input (Brain modals) ─── */
+.brain-input {
+  display: flex;
+  height: 34px;
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid var(--brain-border);
+  background: var(--brain-surface);
+  padding: 0 10px;
+  font-size: 12px;
+  color: var(--brain-text);
+  font-family: var(--brain-font);
+  outline: none;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+  box-sizing: border-box;
+}
+
+.brain-input::placeholder {
+  color: var(--brain-text-secondary);
+  opacity: 0.75;
+}
+
+.brain-input:focus-visible {
+  border-color: rgba(120, 113, 108, 0.45);
+  box-shadow: 0 0 0 3px var(--brain-accent-bg);
+}
+
+[data-theme="dark"] .brain-input:focus-visible,
+body.Mui-dark .brain-input:focus-visible {
+  border-color: rgba(161, 161, 170, 0.45);
+}
+
+.brain-input:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* ─── Tooltip ─── */
+.brain-tooltip {
+  z-index: 1500;
+  overflow: hidden;
+  border-radius: 8px;
+  border: 1px solid var(--brain-border);
+  background: var(--brain-surface);
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--brain-text);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  font-family: var(--brain-font);
+}
+
+[data-theme="dark"] .brain-tooltip,
+body.Mui-dark .brain-tooltip {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+/* ─── Notice / cards inside dialogs ─── */
+.brain-sub__notice {
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--brain-border);
+  background: var(--brain-accent-bg);
+  color: var(--brain-text);
+  font-size: 12px;
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+
+.brain-sub__req-item {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--brain-border);
+}
+
+.brain-sub__req-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.brain-sub__req-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: var(--brain-hover);
+  color: var(--brain-text-secondary);
+}

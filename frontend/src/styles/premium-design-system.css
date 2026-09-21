@@ -1,0 +1,530 @@
+/**
+ * Refinamentos globais — densidade, tipografia e superfícies premium.
+ * Não altera cores de fundo do whitelabel / dark mode (apenas estrutura visual).
+ */
+
+:root {
+  --premium-font: var(--font-ui, "Inter", "Plus Jakarta Sans", system-ui, sans-serif);
+  --premium-font-display: var(--font-display, "Plus Jakarta Sans", "Inter", system-ui, sans-serif);
+  --premium-ink: var(--vb-ink, #0b1b3b);
+  --premium-blue: var(--vb-crm-blue, #1E3A8A);
+  --premium-radius-sm: 6px;
+  --premium-radius-md: 8px;
+  --premium-radius-lg: 10px;
+  --premium-shadow-xs: 0 1px 2px rgba(11, 27, 59, 0.04);
+  --premium-shadow-sm: 0 1px 3px rgba(11, 27, 59, 0.06);
+  --premium-border-subtle: var(--vb-border, #e4e7ec);
+  --premium-transition: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Densidade e tipografia em componentes MUI (sem mudar background-color de tema) */
+.MuiButton-root {
+  font-family: var(--premium-font) !important;
+  min-height: 32px;
+  font-size: 0.8125rem !important;
+  font-weight: 500 !important;
+  letter-spacing: -0.01em;
+}
+
+.MuiButton-sizeSmall {
+  min-height: 28px;
+  font-size: 0.75rem !important;
+  padding: 4px 10px !important;
+}
+
+.MuiIconButton-root:not(.premium-fab) {
+  padding: 6px !important;
+  border-radius: var(--premium-radius-sm) !important;
+  transition: background-color var(--premium-transition),
+    color var(--premium-transition) !important;
+}
+
+.MuiIconButton-root:not(.premium-fab):hover {
+  transform: none !important;
+}
+
+/* Botão criar flutuante — circular como antes */
+.MuiIconButton-root.premium-fab,
+.MuiFab-root {
+  border-radius: 50% !important;
+  width: 52px !important;
+  height: 52px !important;
+  min-width: 52px !important;
+  min-height: 52px !important;
+  padding: 0 !important;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.14) !important;
+}
+
+.MuiIconButton-root.premium-fab:hover {
+  transform: none !important;
+  filter: brightness(1.04);
+}
+
+.MuiOutlinedInput-root {
+  font-family: var(--premium-font) !important;
+  font-size: 0.8125rem !important;
+  min-height: 36px;
+}
+
+.MuiInputLabel-root,
+.MuiFormLabel-root {
+  font-family: var(--premium-font) !important;
+  font-size: 0.75rem !important;
+}
+
+.MuiTableCell-root {
+  font-family: var(--premium-font) !important;
+  font-size: 0.8125rem !important;
+  padding: 8px 12px !important;
+  border-bottom-color: var(--premium-border-subtle) !important;
+}
+
+.MuiTableCell-head {
+  font-size: 0.6875rem !important;
+  font-weight: 500 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: transparent !important;
+  padding-top: 10px !important;
+  padding-bottom: 10px !important;
+}
+
+.MuiTableRow-root:hover {
+  background-color: rgba(15, 23, 42, 0.02) !important;
+}
+
+.MuiDialogTitle-root {
+  font-family: var(--premium-font) !important;
+  font-size: 0.9375rem !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.02em;
+}
+
+.MuiDialogContent-root {
+  font-family: var(--premium-font) !important;
+  font-size: 0.8125rem !important;
+}
+
+.MuiDialogActions-root {
+  padding: 12px 16px !important;
+  gap: 8px;
+}
+
+.MuiCard-root {
+  border-radius: var(--premium-radius-lg) !important;
+  box-shadow: var(--premium-shadow-xs) !important;
+  transition: box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.25s ease !important;
+}
+
+.MuiCard-root:hover {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12),
+    0 4px 10px rgba(15, 23, 42, 0.06) !important;
+}
+
+:root[style*="color-scheme: dark"] .MuiCard-root:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45),
+    0 4px 10px rgba(0, 0, 0, 0.3) !important;
+}
+
+.MuiTab-root {
+  font-family: var(--premium-font) !important;
+  font-size: 0.8125rem !important;
+  min-height: 36px !important;
+}
+
+.MuiChip-root {
+  font-family: var(--premium-font) !important;
+  font-size: 0.75rem !important;
+  height: 24px !important;
+}
+
+/* Rótulos dos filtros (Pipeline, Responsável…) — minimalista, cinza escuro */
+[class*="filterBar"] [class*="filterLabel"],
+[class*="filterBar"] .MuiTypography-root[class*="filterLabel"],
+[class*="filterBar"] span[class*="filterLabel"] {
+  font-size: 0.5625rem !important;
+  font-weight: 400 !important;
+  line-height: 1 !important;
+  letter-spacing: -0.01em !important;
+}
+
+[class*="filterBar"] [class*="chevronIcon"],
+[class*="filterBar"] .MuiSvgIcon-root[class*="chevronIcon"] {
+  font-size: 10px !important;
+  width: 10px !important;
+  height: 10px !important;
+}
+
+[class*="filterBar"] [class*="calendarIcon"],
+[class*="filterBar"] .MuiSvgIcon-root[class*="calendarIcon"] {
+  font-size: 10px !important;
+  width: 10px !important;
+  height: 10px !important;
+}
+
+[class*="filterBar"] [class*="filterInput"] .MuiInputBase-input,
+[class*="filterBar"] [class*="filterInput"] input {
+  font-size: 0.5625rem !important;
+  line-height: 1 !important;
+  padding: 0 !important;
+}
+
+[class*="filterBar"] [class*="filterInput"] .MuiInputBase-input::placeholder,
+[class*="filterBar"] [class*="filterInput"] input::placeholder {
+  font-size: 0.5625rem !important;
+  line-height: 1 !important;
+  opacity: 1 !important;
+}
+
+.MuiListItem-root {
+  font-family: var(--premium-font) !important;
+}
+
+/* Menu lateral — densidade e alinhamento */
+.logged-in-layout .MuiDrawer-paper .MuiListItem-root {
+  min-height: 28px !important;
+  padding-top: 1px !important;
+  padding-bottom: 1px !important;
+}
+
+.logged-in-layout .MuiDrawer-paper .MuiListItemIcon-root {
+  padding: 0 !important;
+}
+
+.logged-in-layout .MuiDrawer-paper .MuiListItemText-root {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.logged-in-layout .MuiDrawer-paper .MuiListItemText-primary {
+  font-size: 11.5px !important;
+  line-height: 28px !important;
+}
+
+/* Bloco inferior do menu (Atendimento, Email, Configurações…) */
+.logged-in-layout .MuiDrawer-paper .MuiListItem-root[class*="listItemBottomPrimary"] {
+  min-height: 30px !important;
+  height: 30px !important;
+}
+
+.logged-in-layout
+  .MuiDrawer-paper
+  .MuiListItem-root[class*="listItemBottomPrimary"]
+  .MuiListItemText-primary {
+  font-size: 12px !important;
+  line-height: 30px !important;
+}
+
+.MuiTypography-h1,
+.MuiTypography-h2,
+.MuiTypography-h3,
+.MuiTypography-h4,
+.MuiTypography-h5,
+.MuiTypography-h6 {
+  font-family: var(--premium-font-display) !important;
+  letter-spacing: -0.02em;
+  color: var(--premium-ink);
+}
+
+.MuiTypography-h6 {
+  font-weight: 600 !important;
+  font-size: 0.875rem !important;
+}
+
+/* Saudação do dashboard Início — fina, Helvetica Neue */
+.MuiTypography-h6[data-dashboard-greeting="true"] {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+  font-size: 1.15rem !important;
+  line-height: 1.35 !important;
+  font-weight: 300 !important;
+  letter-spacing: 0.02em !important;
+}
+
+.MuiTypography-body1 {
+  font-size: 0.8125rem !important;
+  line-height: 1.5 !important;
+}
+
+.MuiTypography-body2 {
+  font-size: 0.75rem !important;
+  line-height: 1.45 !important;
+}
+
+/* Scrollbars discretas */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(15, 23, 42, 0.15) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgba(15, 23, 42, 0.12);
+  border-radius: 999px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(15, 23, 42, 0.2);
+}
+
+/* Scrollbar branca visível no dark mode */
+[data-theme="dark"] *,
+.dark *,
+:root[style*="color-scheme: dark"] * {
+  scrollbar-color: rgba(255,255,255,0.45) rgba(255,255,255,0.06);
+}
+
+[data-theme="dark"] *::-webkit-scrollbar-thumb,
+.dark *::-webkit-scrollbar-thumb,
+:root[style*="color-scheme: dark"] *::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.4);
+}
+
+[data-theme="dark"] *::-webkit-scrollbar-thumb:hover,
+.dark *::-webkit-scrollbar-thumb:hover,
+:root[style*="color-scheme: dark"] *::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.55);
+}
+
+[data-theme="dark"] *::-webkit-scrollbar-track,
+.dark *::-webkit-scrollbar-track,
+:root[style*="color-scheme: dark"] *::-webkit-scrollbar-track {
+  background: rgba(255,255,255,0.06);
+}
+
+/* ========== Dark Mode: Drawers & Modals ========== */
+:root[style*="color-scheme: dark"] .MuiDrawer-paper:not(.logged-in-layout .MuiDrawer-paper) {
+  background-color: #1e1e1e !important;
+  color: #f4f4f5 !important;
+}
+
+:root[style*="color-scheme: dark"] .MuiDialog-paper {
+  background-color: #252526 !important;
+  color: #f4f4f5 !important;
+}
+
+:root[style*="color-scheme: dark"] .MuiDrawer-paper:not(.logged-in-layout .MuiDrawer-paper) .MuiPaper-root,
+:root[style*="color-scheme: dark"] .MuiDialog-paper .MuiPaper-root {
+  background-color: #2d2d2d !important;
+  color: #f4f4f5 !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+:root[style*="color-scheme: dark"] .MuiDrawer-paper .MuiOutlinedInput-root,
+:root[style*="color-scheme: dark"] .MuiDialog-paper .MuiOutlinedInput-root {
+  color: #f4f4f5 !important;
+}
+
+:root[style*="color-scheme: dark"] .MuiDrawer-paper .MuiOutlinedInput-notchedOutline,
+:root[style*="color-scheme: dark"] .MuiDialog-paper .MuiOutlinedInput-notchedOutline {
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+:root[style*="color-scheme: dark"] .MuiDrawer-paper .MuiInputLabel-root,
+:root[style*="color-scheme: dark"] .MuiDialog-paper .MuiInputLabel-root {
+  color: #a1a1aa !important;
+}
+
+:root[style*="color-scheme: dark"] .MuiDrawer-paper .MuiSelect-icon,
+:root[style*="color-scheme: dark"] .MuiDialog-paper .MuiSelect-icon {
+  color: #a1a1aa !important;
+}
+
+:root[style*="color-scheme: dark"] .MuiDrawer-paper .MuiDivider-root,
+:root[style*="color-scheme: dark"] .MuiDialog-paper .MuiDivider-root {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+:root[style*="color-scheme: dark"] .MuiDrawer-paper [style*="border-bottom"],
+:root[style*="color-scheme: dark"] .MuiDialog-paper [style*="border-bottom"] {
+  border-bottom-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* ========== Dark Mode: Fix dark-blue text to white ========== */
+:root[style*="color-scheme: dark"] .MuiTypography-root {
+  color: #f4f4f5 !important;
+}
+
+:root[style*="color-scheme: dark"] .MuiTypography-colorTextSecondary {
+  color: #a1a1aa !important;
+}
+
+:root[style*="color-scheme: dark"] .MuiTypography-colorPrimary {
+  color: #93c5fd !important;
+}
+
+:root[style*="color-scheme: dark"] .MuiFormLabel-root {
+  color: #a1a1aa !important;
+}
+
+:root[style*="color-scheme: dark"] .MuiInputBase-root {
+  color: #f4f4f5 !important;
+}
+
+:root[style*="color-scheme: dark"] .MuiTableCell-root {
+  color: #f4f4f5 !important;
+}
+
+:root[style*="color-scheme: dark"] .MuiListItemText-primary {
+  color: #f4f4f5 !important;
+}
+
+:root[style*="color-scheme: dark"] .MuiListItemText-secondary {
+  color: #a1a1aa !important;
+}
+
+:root[style*="color-scheme: dark"] .MuiButton-root.MuiButton-text,
+:root[style*="color-scheme: dark"] .MuiButton-root.MuiButton-outlined {
+  color: #f4f4f5;
+}
+
+:root[style*="color-scheme: dark"] .MuiButton-containedPrimary {
+  color: #fff !important;
+}
+
+:root[style*="color-scheme: dark"] .MuiLink-root {
+  color: #93c5fd !important;
+}
+
+:root[style*="color-scheme: dark"] a {
+  color: #93c5fd;
+}
+
+/* ========== Dark Mode: Agenda event items — force dark text on light bg ========== */
+:root[style*="color-scheme: dark"] [data-agenda-event],
+:root[style*="color-scheme: dark"] [class*="agendaItem"] {
+  color-scheme: light;
+  color: #1f2937 !important;
+}
+
+:root[style*="color-scheme: dark"] [data-agenda-event] *,
+:root[style*="color-scheme: dark"] [data-agenda-event] .MuiTypography-root,
+:root[style*="color-scheme: dark"] [class*="agendaItem"] .MuiTypography-root,
+:root[style*="color-scheme: dark"] [class*="agendaItem"] span {
+  color: #1f2937 !important;
+}
+
+:root[style*="color-scheme: dark"] [data-agenda-event] [class*="agendaTime"],
+:root[style*="color-scheme: dark"] [class*="agendaTime"] {
+  color: #374151 !important;
+}
+
+/* ========== Dark Mode: Card borders gray instead of white ========== */
+:root[style*="color-scheme: dark"] .MuiCard-root {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4) !important;
+}
+
+:root[style*="color-scheme: dark"] .MuiPaper-outlined {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+:root[style*="color-scheme: dark"] .MuiDivider-root {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+:root[style*="color-scheme: dark"] .MuiTableCell-root {
+  border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* ========== Dark Mode: Settings page — transparent containers ========== */
+:root[style*="color-scheme: dark"] [class*="settingsRoot"] {
+  background-color: transparent !important;
+}
+
+:root[style*="color-scheme: dark"] [class*="settingsRoot"] > .MuiPaper-root {
+  background-color: transparent !important;
+}
+
+:root[style*="color-scheme: dark"] [class*="settingsRoot"] .MuiPaper-elevation0 {
+  background-color: transparent !important;
+}
+
+/* ========== Dark Mode: DialogActions bar fix ========== */
+:root[style*="color-scheme: dark"] .MuiDialogActions-root {
+  background-color: transparent !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+/* ========== Modals: Button layout — Save/Create right, Cancel left ========== */
+.MuiDialogActions-root {
+  display: flex !important;
+  justify-content: space-between !important;
+  flex-direction: row !important;
+  padding: 12px 16px !important;
+}
+
+.MuiDialogActions-root > .MuiButton-root:first-child {
+  margin-right: auto !important;
+}
+
+.MuiDialogActions-root > .MuiButton-root:last-child {
+  margin-left: auto !important;
+}
+
+/* ========== Dark Mode: Fix bottom bar behind modal footer ========== */
+:root[style*="color-scheme: dark"] .MuiDialog-container {
+  background-color: rgba(0, 0, 0, 0.7) !important;
+}
+
+:root[style*="color-scheme: dark"] .MuiDialog-paper > div:last-child,
+:root[style*="color-scheme: dark"] .MuiDrawer-paper > div:last-child {
+  background-color: inherit !important;
+}
+
+:root[style*="color-scheme: dark"] .MuiDialog-paper,
+:root[style*="color-scheme: dark"] .MuiDrawer-paper {
+  background-image: none !important;
+}
+
+:root[style*="color-scheme: dark"] .MuiDialog-paper > .MuiDialogActions-root,
+:root[style*="color-scheme: dark"] .MuiDrawer-paper > .MuiDialogActions-root,
+:root[style*="color-scheme: dark"] .MuiDialog-paper .MuiDialogActions-root,
+:root[style*="color-scheme: dark"] .MuiDrawer-paper .MuiDialogActions-root {
+  background-color: transparent !important;
+  background: transparent !important;
+}
+
+/* ========== Dashboard Cards: 3D hover effect ========== */
+[data-dashboard-cards] .MuiPaper-root {
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+[data-dashboard-cards] .MuiPaper-root:hover {
+  transform: translateY(-4px) scale(1.008) !important;
+  box-shadow:
+    0 14px 28px rgba(15, 23, 42, 0.13),
+    0 6px 12px rgba(15, 23, 42, 0.08),
+    0 2px 4px rgba(15, 23, 42, 0.04) !important;
+}
+
+:root[style*="color-scheme: dark"] [data-dashboard-cards] .MuiPaper-root:hover {
+  transform: translateY(-4px) scale(1.008) !important;
+  box-shadow:
+    0 14px 28px rgba(0, 0, 0, 0.5),
+    0 6px 12px rgba(0, 0, 0, 0.35),
+    0 2px 4px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* ========== Dashboard (Inicio): Exclude graph/chart Paper from hover ========== */
+[data-dashboard-cards] .MuiPaper-root .recharts-wrapper,
+[data-dashboard-cards] .MuiPaper-root canvas {
+  pointer-events: auto;
+}
+
+/* ========== Dashboard (Inicio): Agenda event text fix for dark mode ========== */
+:root[style*="color-scheme: dark"] [data-agenda-event] *,
+:root[style*="color-scheme: dark"] [data-agenda-event] .MuiTypography-root {
+  color: #1f2937 !important;
+}
+
+:root[style*="color-scheme: dark"] [data-agenda-event] [class*="agendaTime"] {
+  color: #374151 !important;
+}

@@ -1,0 +1,65 @@
+/**
+ * Copyright (c) Visão Business. Todos os direitos reservados.
+ * VB Solution CRM — propriedade intelectual da Visão Business.
+ * Uso conforme LICENSE na raiz do repositório.
+ */
+
+import { QueryInterface, DataTypes } from "sequelize";
+
+module.exports = {
+    up: (queryInterface: QueryInterface) => {
+        return queryInterface.createTable("Subscriptions", {
+            id: {
+                type: DataTypes.INTEGER,
+                autoIncrement: true,
+                primaryKey: true,
+                allowNull: false
+            },
+            isActive: {
+                type: DataTypes.BOOLEAN,
+                defaultValue: false
+            },
+            expiresAt: {
+                type: DataTypes.DATE,
+                allowNull: false
+            },
+            userPriceCents: {
+                type: DataTypes.INTEGER
+            },
+            whatsPriceCents: {
+                type: DataTypes.INTEGER
+            },
+            lastInvoiceUrl: {
+                type: DataTypes.STRING,
+                allowNull: true
+            },
+            lastPlanChange: {
+                type: DataTypes.DATE,
+                allowNull: true
+            },
+            companyId: {
+                type: DataTypes.INTEGER,
+                references: { model: "Companies", key: "id" },
+                onUpdate: "CASCADE",
+                onDelete: "SET NULL",
+                allowNull: false
+            },
+            providerSubscriptionId: {
+                type: DataTypes.STRING,
+                allowNull: false
+            },
+            createdAt: {
+                type: DataTypes.DATE,
+                allowNull: false
+            },
+            updatedAt: {
+                type: DataTypes.DATE,
+                allowNull: false
+            }
+        });
+    },
+
+    down: (queryInterface: QueryInterface) => {
+        return queryInterface.dropTable("Subscriptions");
+    }
+};

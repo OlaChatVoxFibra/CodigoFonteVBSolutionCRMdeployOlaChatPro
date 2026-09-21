@@ -1,0 +1,153 @@
+/**
+ * Brain.AI — chrome UI (tabs, IDE home cards, MCP dialog tweaks).
+ */
+
+.brain-tabs-list {
+  font-family: var(--brain-font);
+}
+
+.brain-tabs-trigger {
+  font-family: var(--brain-font);
+}
+
+.brain-ide-create-card,
+.brain-ide-project-card,
+.brain-ide-skeleton-card {
+  font-family: var(--brain-font);
+}
+
+.brain-mcp-dialog {
+  display: flex;
+  flex-direction: column;
+  max-height: min(88vh, 600px);
+  overflow: hidden;
+}
+
+.brain-mcp-dialog__header {
+  flex-shrink: 0;
+  padding: 18px 20px 10px !important;
+}
+
+.brain-mcp-dialog__header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding-right: 28px;
+}
+
+.brain-mcp-dialog__header-main {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+
+.brain-mcp-dialog__header-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  background: var(--brain-purple-soft);
+  color: var(--brain-purple);
+  border: 1px solid var(--brain-purple-border);
+}
+
+.brain-mcp-dialog__header-copy {
+  min-width: 0;
+}
+
+.brain-mcp-dialog__title {
+  margin: 0;
+  font-size: 15px !important;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--brain-text);
+  letter-spacing: -0.01em;
+}
+
+.brain-mcp-dialog__subtitle {
+  margin: 4px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--brain-text-secondary);
+}
+
+.brain-mcp-dialog__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  padding-top: 2px;
+}
+
+.brain-mcp-dialog__count {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  background: var(--brain-purple-soft);
+  color: var(--brain-purple);
+  border: 1px solid var(--brain-purple-border);
+}
+
+.brain-mcp-dialog__body {
+  flex: 1;
+  min-height: 0;
+  padding: 6px 20px 14px !important;
+}
+
+.brain-mcp-dialog__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+@media (min-width: 520px) {
+  .brain-mcp-dialog__grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.brain-mcp-dialog__card {
+  padding: 10px 12px !important;
+  border-radius: 12px !important;
+  transform: none !important;
+}
+
+.brain-mcp-dialog__card:hover {
+  transform: none !important;
+}
+
+.brain-mcp-dialog__card-icon {
+  width: 30px !important;
+  height: 30px !important;
+  border-radius: 8px !important;
+}
+
+.brain-mcp-dialog__card-desc {
+  font-size: 11px !important;
+  line-height: 1.4 !important;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.brain-mcp-dialog__card.brain-sub__card--active {
+  border-color: var(--brain-purple-border);
+  background: var(--brain-purple-soft);
+}
+
+.brain-mcp-dialog__card.brain-sub__card--active .brain-sub__check--on {
+  background: var(--brain-purple, #a78bfa);
+  border-color: transparent;
+  color: #fff;
+}

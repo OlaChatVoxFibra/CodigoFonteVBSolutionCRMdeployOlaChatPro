@@ -1,0 +1,94 @@
+# LICENÇA DE USO DO CÓDIGO-FONTE
+## VB Solution CRM — Visão Business
+
+**Copyright © Visão Business.** Todos os direitos reservados.
+
+Este arquivo define os termos de uso do código-fonte do produto **VB Solution CRM**, comercializado pela **Visão Business** (e entidades do grupo Visão Business Tech), doravante denominada **LICENCIANTE**.
+
+O adquirente do pacote de código-fonte, doravante denominado **LICENCIADO** ou **COMPRADOR**, ao obter, instalar, copiar ou utilizar este repositório, concorda integralmente com os termos abaixo.
+
+---
+
+## 1. Objeto
+
+Esta licença concede ao COMPRADOR o direito de uso do **código-fonte** do VB Solution CRM, incluindo frontend, backend e artefatos incluídos neste repositório, nos limites estabelecidos nesta LICENÇA e na política comercial vigente da Visão Business.
+
+Não há transferência de propriedade intelectual. A titularidade do código, marcas, nomes, logotipos e documentação permanece exclusivamente com a LICENCIANTE.
+
+---
+
+## 2. Uso permitido (uso comercial próprio)
+
+O COMPRADOR está autorizado a:
+
+1. Instalar, configurar e operar o sistema em infraestrutura **própria** ou de provedores contratados **para si**;
+2. Personalizar identidade visual, textos e integrações com **suas próprias** chaves de API e credenciais;
+3. Utilizar o software para fins comerciais **próprios** (atendimento, vendas e operação do COMPRADOR ou de empresas do mesmo grupo econômico, quando previsto no contrato de compra);
+4. Contratar desenvolvedores para manutenção e customização **interna**, desde que esses terceiros se submetam a confidencialidade equivalente a esta LICENÇA.
+
+---
+
+## 3. Restrições — proibição de revenda do código-fonte
+
+É **expressamente proibido**, sem autorização prévia e escrita da Visão Business:
+
+1. **Revender, sublicenciar, redistribuir ou alugar o código-fonte** (no todo ou em parte) como produto, template, white-label de terceiros ou “código pronto”;
+2. Publicar o repositório completo ou substancialmente equivalente em plataformas públicas ou privadas de forma que terceiros não autorizados obtenham o código;
+3. Remover ou alterar avisos de copyright, esta LICENÇA ou marcações de propriedade da Visão Business / VB Solution, salvo white-label visual contratado;
+4. Utilizar o nome, logotipo ou marca **Visão Business**, **VB Solution** ou derivados de modo a sugerir parceria, endosso ou origem falsa, além do uso legítimo de identificação do produto licenciado;
+5. Empacotar o código como SaaS multi-tenant para **revenda a terceiros** como se fosse produto próprio derivado do código-fonte, salvo contrato comercial específico com a Visão Business.
+
+O COMPRADOR pode operar o sistema para **seus clientes finais** (modelo de prestador de serviço / operação), desde que **não** transfira nem revenda o código-fonte em si.
+
+---
+
+## 4. Chaves, dados e integrações de terceiros
+
+1. O código é fornecido **sem** chaves de API da Visão Business (OpenAI, Anthropic, Gemini, Meta, Stripe etc.);
+2. O COMPRADOR é o único responsável por obter, pagar e proteger as próprias credenciais junto a provedores terceiros;
+3. A Visão Business não se responsabiliza por custos, limites, bloqueios ou políticas desses provedores;
+4. Bancos de dados, servidores e ambientes de deploy são de responsabilidade do COMPRADOR.
+
+---
+
+## 5. Confidencialidade
+
+O código-fonte e a documentação técnica constituem informação confidencial e proprietária. O COMPRADOR deve aplicar medidas razoáveis de segurança (controle de acesso, .env fora do versionamento público, etc.) para impedir vazamento.
+
+---
+
+## 6. Garantia e limitação de responsabilidade
+
+O software é fornecido **“no estado em que se encontra” (as is)**, sem garantias implícitas de comercialização, adequação a um propósito específico ou ausência de erros.
+
+Na máxima extensão permitida pela lei aplicável, a LICENCIANTE não responde por danos indiretos, lucros cessantes, perda de dados ou interrupção de negócios decorrentes do uso ou da impossibilidade de uso do software.
+
+---
+
+## 7. Atualizações e suporte
+
+Atualizações, patches e suporte técnico seguem o **contrato de compra** e a política comercial da Visão Business vigentes na data da aquisição. Esta LICENÇA, por si só, não obriga entrega contínua de novas versões.
+
+---
+
+## 8. Rescisão
+
+O descumprimento das cláusulas 3 (revenda / redistribuição do código-fonte) ou 5 (confidencialidade) autoriza a Visão Business a revogar esta licença, sem prejuízo de medidas cíveis e criminais cabíveis. Com a rescisão, o COMPRADOR deve cessar o uso do código em novos projetos e destruir cópias não autorizadas, salvo obrigação legal de retenção.
+
+---
+
+## 9. Lei aplicável
+
+Salvo disposição em contrário no contrato de compra, aplica-se a legislação da República Federativa do Brasil, com foro preferencial da comarca da sede da Visão Business, salvo regras de competência imperativas.
+
+---
+
+## 10. Aceite
+
+A obtenção deste repositório, o pagamento do pacote de código-fonte ou o início da instalação constituem aceite integral destes termos e da política comercial da Visão Business referente à **não revenda do código-fonte**.
+
+---
+
+**Visão Business**  
+Produto: **VB Solution CRM**  
+Contato comercial e jurídico: conforme canais oficiais da Visão Business / Visão Business Tech.

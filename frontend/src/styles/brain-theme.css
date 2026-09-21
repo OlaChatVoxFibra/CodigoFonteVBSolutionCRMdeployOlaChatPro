@@ -1,0 +1,96 @@
+/**
+ * Brain.AI design tokens — global (:root) para modais/sheets portaled fora de .brain-shell.
+ * Dark via data-theme (sync AppThemeRoot) ou body.Mui-dark (MUI legacy).
+ */
+
+:root {
+  --brain-bg: #ffffff;
+  --brain-surface: #ffffff;
+  --brain-surface-muted: #ffffff;
+  --brain-border: rgba(0, 0, 0, 0.08);
+  --brain-text: #1c1917;
+  --brain-text-secondary: #78716c;
+  --brain-accent: #57534e;
+  --brain-accent-light: #78716c;
+  --brain-accent-bg: rgba(87, 83, 78, 0.06);
+  --brain-accent-bg-hover: rgba(87, 83, 78, 0.1);
+  --brain-hover: rgba(0, 0, 0, 0.04);
+  --brain-hover-strong: rgba(0, 0, 0, 0.06);
+  --brain-send: #a8a29e;
+  --brain-send-hover: #78716c;
+  --brain-cta: #9b87f5;
+  --brain-cta-hover: #8b5cf6;
+  --brain-purple: #a78bfa;
+  --brain-purple-soft: rgba(167, 139, 250, 0.14);
+  --brain-purple-border: rgba(167, 139, 250, 0.28);
+  --brain-icon: #c7c7cc;
+  --brain-overlay: rgba(0, 0, 0, 0.45);
+  --brain-shadow-lg: 0 24px 48px rgba(0, 0, 0, 0.14);
+  --brain-font: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", sans-serif;
+  --brain-mesh: radial-gradient(
+      ellipse 120% 100% at 88% 92%,
+      rgba(236, 72, 153, 0.14) 0%,
+      transparent 58%
+    ),
+    radial-gradient(
+      ellipse 100% 85% at 72% 88%,
+      rgba(59, 130, 246, 0.18) 0%,
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse 90% 70% at 95% 78%,
+      rgba(139, 92, 246, 0.12) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      ellipse 70% 55% at 58% 72%,
+      rgba(96, 165, 250, 0.08) 0%,
+      transparent 44%
+    );
+}
+
+[data-theme="dark"],
+body.Mui-dark {
+  --brain-bg: #2d2d2d;
+  --brain-surface: #3a3a3a;
+  --brain-surface-muted: #2d2d2d;
+  --brain-border: rgba(255, 255, 255, 0.1);
+  --brain-text: #f2f2f7;
+  --brain-text-secondary: #aeaeb2;
+  --brain-accent: #d1d1d6;
+  --brain-accent-light: #aeaeb2;
+  --brain-accent-bg: rgba(255, 255, 255, 0.08);
+  --brain-accent-bg-hover: rgba(255, 255, 255, 0.12);
+  --brain-hover: rgba(255, 255, 255, 0.08);
+  --brain-hover-strong: rgba(255, 255, 255, 0.1);
+  --brain-send: #636366;
+  --brain-send-hover: #8e8e93;
+  --brain-cta: #9b87f5;
+  --brain-cta-hover: #b4a0ff;
+  --brain-purple: #a78bfa;
+  --brain-purple-soft: rgba(155, 135, 245, 0.14);
+  --brain-purple-border: rgba(155, 135, 245, 0.28);
+  --brain-icon: #8e8e93;
+  --brain-overlay: rgba(0, 0, 0, 0.62);
+  --brain-shadow-lg: 0 24px 48px rgba(0, 0, 0, 0.45);
+  --brain-mesh: radial-gradient(
+      ellipse 120% 100% at 88% 92%,
+      rgba(236, 72, 153, 0.1) 0%,
+      transparent 58%
+    ),
+    radial-gradient(
+      ellipse 100% 85% at 72% 88%,
+      rgba(59, 130, 246, 0.12) 0%,
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse 90% 70% at 95% 78%,
+      rgba(139, 92, 246, 0.09) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      ellipse 70% 55% at 58% 72%,
+      rgba(63, 63, 70, 0.14) 0%,
+      transparent 44%
+    );
+}

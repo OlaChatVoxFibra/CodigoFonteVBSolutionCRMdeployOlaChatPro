@@ -1,0 +1,28 @@
+{
+  "name": "@vbsolution/crm-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for VBSolution CRM — connect Claude, Cursor, VS Code and other AI tools to your CRM data",
+  "type": "module",
+  "bin": {
+    "vbsolution-crm-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsc && node dist/index.js"
+  },
+  "keywords": ["mcp", "crm", "vbsolution", "claude", "cursor"],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

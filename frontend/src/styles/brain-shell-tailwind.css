@@ -1,0 +1,36 @@
+/**
+ * Brain.AI — Tailwind-adjacent utilities for the Brain shell / IDE home.
+ * Complements brain-shell.css where utility classes are used in JSX.
+ */
+
+.brain-shell .brain-tabs-list,
+.brain-shell__ide-page--home .brain-tabs-list {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(24, 24, 27, 0.65);
+  max-width: 100%;
+}
+
+.brain-shell .brain-tabs-trigger[data-state="active"],
+.brain-shell__ide-page--home .brain-tabs-trigger[data-state="active"] {
+  background: rgba(39, 39, 42, 0.95);
+  color: #f4f4f5;
+}
+
+/* Tailwind/shadcn tokens em dark — modais portaled fora de .brain-shell */
+[data-theme="dark"],
+body.Mui-dark {
+  --color-background: var(--brain-surface, #3a3a3a);
+  --color-foreground: var(--brain-text, #f2f2f7);
+  --color-card: var(--brain-surface, #3a3a3a);
+  --color-card-foreground: var(--brain-text, #f2f2f7);
+  --color-popover: var(--brain-surface, #3a3a3a);
+  --color-popover-foreground: var(--brain-text, #f2f2f7);
+  --color-muted: rgba(255, 255, 255, 0.06);
+  --color-muted-foreground: var(--brain-text-secondary, #aeaeb2);
+  --color-accent: rgba(255, 255, 255, 0.08);
+  --color-accent-foreground: var(--brain-text, #f2f2f7);
+  --color-border: var(--brain-border, rgba(255, 255, 255, 0.1));
+  --color-input: var(--brain-border, rgba(255, 255, 255, 0.1));
+  --color-secondary: rgba(255, 255, 255, 0.06);
+  --color-secondary-foreground: var(--brain-text, #f2f2f7);
+}

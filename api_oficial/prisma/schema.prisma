@@ -1,0 +1,87 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_LINK")
+}
+
+model company {
+  id               Int               @id @default(autoincrement())
+  create_at        DateTime?         @default(now())
+  update_at        DateTime?         @updatedAt()
+  deleted_at       DateTime?
+  name             String
+  idEmpresaMult100 Int               @unique()
+  token            String            @default(uuid())
+  whatsappOficial  whatsappOficial[]
+}
+
+model whatsappOficial {
+  id                   Int                   @id @default(autoincrement())
+  phone_number_id      String // id do telefone do business meta
+  waba_id              String // identificação da meta business
+  send_token           String // token de envio api
+  business_id          String // id da empresa
+  phone_number         String // numero telefone
+  company              company               @relation(fields: [companyId], references: [id])
+  companyId            Int
+  use_rabbitmq         Boolean               @default(false)
+  token_mult100        String                @unique()
+  create_at            DateTime?             @default(now())
+  update_at            DateTime?             @updatedAt()
+  deleted_at           DateTime?
+  chatwoot_webhook_url String?
+  auth_token_chatwoot  String?
+  n8n_webhook_url      String?
+  auth_token_n8n       String?
+  crm_webhook_url      String?
+  auth_token_crm       String?
+  typebot_webhook_url  String?
+  auth_token_typebot   String?
+  rabbitmq_exchange    String? // id da empresa
+  rabbitmq_queue       String? // padrão do phone number
+  rabbitmq_routing_key String? // pessoa que esta criando
+  sendMessageWhatsApp  sendMessageWhatsApp[]
+}
+
+model sendMessageWhatsApp {
+  id                Int             @id @default(autoincrement())
+  create_at         DateTime?       @default(now())
+  update_at         DateTime?       @updatedAt()
+  deleted_at        DateTime?
+  type              typeMessage
+  to                String
+  text              Json?
+  reaction          Json?
+  audio             Json?
+  document          Json?
+  image             Json?
+  sticker           Json?
+  video             Json?
+  location          Json?
+  contacts          Json?
+  interactive       Json?
+  template          Json?
+  enviada           Boolean         @default(false)
+  whats             whatsappOficial @relation(fields: [whatsappOficialId], references: [id])
+  pathFile          String?
+  idFileMeta        String?
+  whatsappOficialId Int
+  idMessageWhatsApp Json?
+}
+
+enum typeMessage {
+  text
+  reaction
+  audio
+  document
+  image
+  sticker
+  video
+  location
+  contacts
+  interactive
+  template
+}

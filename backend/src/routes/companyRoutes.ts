@@ -1,0 +1,31 @@
+/**
+ * Copyright (c) Visão Business. Todos os direitos reservados.
+ * VB Solution CRM — propriedade intelectual da Visão Business.
+ * Uso conforme LICENSE na raiz do repositório.
+ */
+
+import express from "express";
+import isAuth from "../middleware/isAuth";
+
+import * as CompanyController from "../controllers/CompanyController";
+
+const companyRoutes = express.Router();
+
+companyRoutes.get("/companies/list", isAuth, CompanyController.list);
+companyRoutes.get("/companies", isAuth, CompanyController.index);
+companyRoutes.get("/companies/:id", isAuth, CompanyController.show);
+companyRoutes.post("/companies", isAuth, CompanyController.store);
+companyRoutes.put("/companies/:id", isAuth, CompanyController.update);
+companyRoutes.patch(
+  "/companies/:id/manual-visual-identity",
+  isAuth,
+  CompanyController.patchManualVisualIdentity
+);
+companyRoutes.put("/companies/:id/schedules",isAuth,CompanyController.updateSchedules);
+companyRoutes.delete("/companies/:id", isAuth, CompanyController.remove);
+
+// Rota para listar o plano da empresa
+companyRoutes.get("/companies/listPlan/:id", isAuth, CompanyController.listPlan);
+companyRoutes.get("/companiesPlan", isAuth, CompanyController.indexPlan);
+
+export default companyRoutes;

@@ -1,0 +1,16 @@
+{
+  "name": "vbsolutionnn",
+  "private": true,
+  "description": "OlaChat Pro — código-fonte (frontend + backend)",
+  "scripts": {
+    "dev": "cd frontend && npm run dev",
+    "dev:frontend": "cd frontend && npm run start",
+    "dev:backend": "cd backend && npm run dev",
+    "brain:terminal": "node tools/brain-local-terminal/server.js",
+    "install:all": "npm install --prefix backend --no-fund --no-audit && npm install --prefix frontend --no-fund --no-audit",
+    "setup": "npm run install:all"
+  },
+  "overrides": {
+    "clsx": "1.2.1"
+  }
+}

@@ -1,0 +1,333 @@
+*{
+	padding: 0;
+	margin: 0;
+	box-sizing: border-box;
+}
+
+body{
+    font-family: 'Poppins', sans-serif;
+    overflow: hidden;
+}
+
+.wave{
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	height: 100%;
+	z-index: -1;
+}
+
+.container{
+    width: 100vw;
+    height: 100vh;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-gap :7rem;
+    padding: 0 2rem;
+}
+
+.img{
+	display: flex;
+	justify-content: flex-end;
+	align-items: center;
+	width: 100%;
+}
+
+
+/* ==========================================
+   CSS PARA LARGURA TOTAL APENAS EM PÁGINAS AUTENTICADAS
+   VERSÃO CORRIGIDA - PROTEÇÃO ROBUSTA PARA MENUS
+   Substitua TODO o conteúdo do style.css por este
+   ========================================== */
+
+/* APLICAR LARGURA TOTAL EM TODAS AS PÁGINAS AUTENTICADAS */
+.logged-in-layout .MuiContainer-root:not(.login-container):not(.signup-container) {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  max-width: none !important;
+  width: 100% !important;
+}
+
+.logged-in-layout main {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.logged-in-layout .MuiPaper-root:not(.MuiMenu-paper):not(.MuiPopover-paper):not(.MuiDialog-paper) {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+/* Garantir que tabelas ocupem toda a largura */
+.logged-in-layout .MuiTableContainer-root {
+  margin: 0 !important;
+  width: 100% !important;
+}
+
+/* Garantir que elementos com container não tenham padding lateral */
+.logged-in-layout div[class*="container"]:not(.login-container):not(.signup-container) {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* ==========================================
+ PROTEÇÃO ROBUSTA PARA MENUS E COMPONENTES
+ ========================================== */
+
+/* PROTEGER TODOS OS MENUS - REGRAS MAIS ESPECÍFICAS */
+.logged-in-layout .MuiMenu-paper,
+.logged-in-layout .MuiPopover-paper,
+.logged-in-layout .MuiSelect-menu,
+.logged-in-layout .MuiPopper-root .MuiPaper-root,
+html body .logged-in-layout .MuiMenu-paper,
+html body .logged-in-layout .MuiPopover-paper {
+  width: auto !important;
+  max-width: 320px !important;
+  min-width: 160px !important;
+  padding: 8px !important;
+  position: fixed !important;
+  left: auto !important;
+  right: auto !important;
+  transform: none !important;
+  margin: 0 !important;
+}
+
+/* PROTEGER MENUS ESPECÍFICOS DO MessageInput */
+#simple-menu .MuiPaper-root,
+#menu-appbar .MuiPaper-root,
+[aria-labelledby="simple-menu"] .MuiPaper-root {
+  width: auto !important;
+  max-width: 280px !important;
+  min-width: 200px !important;
+}
+
+/* PROTEGER MENU DE IDIOMAS */
+.language-dropdown > div,
+.language-dropdown .MuiList-root {
+  width: auto !important;
+  max-width: 200px !important;
+  min-width: 120px !important;
+  position: absolute !important;
+}
+
+/* PROTEGER MENU DO USUÁRIO */
+.user-menu-wrapper .MuiMenu-paper,
+.user-menu-wrapper .MuiPaper-root {
+  width: auto !important;
+  max-width: 200px !important;
+  min-width: 150px !important;
+}
+
+/* PROTEGER TODOS OS MODAIS */
+.logged-in-layout .MuiDialog-paper,
+.logged-in-layout .MuiModal-root .MuiPaper-root {
+  width: auto !important;
+  max-width: 600px !important;
+  margin: 16px !important;
+  position: relative !important;
+  left: auto !important;
+  right: auto !important;
+  transform: none !important;
+}
+
+/* PROTEGER TOOLTIPS */
+.logged-in-layout .MuiTooltip-tooltip,
+.MuiTooltip-popper .MuiTooltip-tooltip {
+  max-width: 300px !important;
+  width: auto !important;
+  position: fixed !important;
+}
+
+/* PROTEGER AUTOCOMPLETE */
+.logged-in-layout .MuiAutocomplete-paper,
+.logged-in-layout .MuiAutocomplete-popper .MuiPaper-root {
+  width: auto !important;
+  max-width: 400px !important;
+  position: fixed !important;
+}
+
+/* PROTEGER SNACKBARS/TOAST */
+.logged-in-layout .MuiSnackbar-root,
+.MuiSnackbar-root {
+  width: auto !important;
+  max-width: 400px !important;
+  position: fixed !important;
+  left: auto !important;
+  right: auto !important;
+}
+
+/* PROTEGER DRAWER */
+.logged-in-layout .MuiDrawer-paper,
+.MuiDrawer-root .MuiPaper-root {
+  width: 240px !important;
+  max-width: 240px !important;
+  position: fixed !important;
+}
+
+/* PROTEGER DATE PICKERS */
+.logged-in-layout .MuiPickersPopper-paper,
+.MuiPickersPopper-root .MuiPaper-root {
+  width: auto !important;
+  max-width: 320px !important;
+  position: fixed !important;
+}
+
+/* PROTEGER BREADCRUMBS */
+.logged-in-layout .MuiBreadcrumbs-root {
+  width: auto !important;
+  max-width: none !important;
+}
+
+/* PROTEGER CHIPS */
+.logged-in-layout .MuiChip-root {
+  width: auto !important;
+  max-width: 200px !important;
+}
+
+/* PROTEGER FAB MENUS */
+.logged-in-layout .MuiFab-root {
+  width: auto !important;
+  max-width: 56px !important;
+  position: relative !important;
+}
+
+/* PROTEGER SELECTS ESPECÍFICOS */
+.logged-in-layout .MuiSelect-root,
+.logged-in-layout .MuiFormControl-root {
+  width: auto !important;
+  max-width: none !important;
+}
+
+/* ==========================================
+ PROTEÇÕES ESPECÍFICAS POR COMPONENTE
+ ========================================== */
+
+/* MessageInput - Proteger todos os menus e componentes */
+[class*="messageInput"] .MuiMenu-paper,
+[class*="messageInput"] .MuiPopover-paper,
+[class*="messageInput"] .MuiFab-root,
+div[class*="mainWrapper"] .MuiMenu-paper {
+  width: auto !important;
+  max-width: 280px !important;
+  min-width: 200px !important;
+}
+
+/* TicketOptionsMenu - Proteger menu */
+[class*="ticketOptions"] .MuiMenu-paper,
+div[id*="menu-appbar"] .MuiPaper-root {
+  width: auto !important;
+  max-width: 250px !important;
+  min-width: 180px !important;
+}
+
+/* TicketActionButtons - Proteger botões e menus */
+[class*="actionButtons"] .MuiMenu-paper,
+[class*="actionButtons"] .MuiIconButton-root,
+[class*="bottomButton"] .MuiIconButton-root {
+  width: auto !important;
+  max-width: 300px !important;
+}
+
+/* ==========================================
+ PROTEÇÕES EXTRAS PARA CASOS ESPECÍFICOS
+ ========================================== */
+
+/* Proteger qualquer elemento posicionado de forma fixa ou absoluta */
+.logged-in-layout [style*="position: fixed"],
+.logged-in-layout [style*="position: absolute"] {
+  width: auto !important;
+  max-width: none !important;
+}
+
+/* Proteger elementos com z-index alto (geralmente overlays) */
+.logged-in-layout [style*="z-index"]:not(.MuiContainer-root) {
+  width: auto !important;
+  max-width: none !important;
+}
+
+/* Forçar reset para componentes problemáticos */
+.MuiPopper-root,
+.MuiPopover-root,
+.MuiModal-root,
+.MuiDialog-root {
+  & .MuiPaper-root {
+      width: auto !important;
+      max-width: fit-content !important;
+      min-width: auto !important;
+      position: relative !important;
+      left: auto !important;
+      right: auto !important;
+      transform: none !important;
+      margin: 0 !important;
+  }
+}
+
+/* Para páginas específicas que podem precisar de padding */
+.logged-in-layout .page-with-padding {
+  padding: 0 16px !important;
+}
+
+/* Manter apenas padding vertical se necessário em algumas páginas */
+.logged-in-layout .content-wrapper {
+  padding: 16px 0 !important;
+}
+
+/* ==========================================
+ FALLBACK - REGRAS DE EMERGÊNCIA
+ ========================================== */
+
+/* Se nada mais funcionar, força reset em todos os menus */
+html body .logged-in-layout .MuiMenu-root .MuiPaper-root,
+html body .logged-in-layout .MuiPopover-root .MuiPaper-root,
+html body .logged-in-layout [role="menu"],
+html body .logged-in-layout [role="listbox"],
+html body .logged-in-layout [aria-haspopup="true"] + div {
+  width: auto !important;
+  max-width: 320px !important;
+  min-width: auto !important;
+  position: fixed !important;
+  left: auto !important;
+  right: auto !important;
+  transform: none !important;
+  margin: 0 !important;
+  flex: none !important;
+}
+
+@media screen and (max-width: 1050px){
+	.container{
+		grid-gap: 5rem;
+	}
+}
+
+@media screen and (max-width: 1000px){
+	form{
+		width: 290px;
+	}
+
+	.login-content h2{
+        font-size: 2.4rem;
+        margin: 8px 0;
+	}
+
+	.img img{
+		width: 400px;
+	}
+}
+
+@media screen and (max-width: 900px){
+	.container{
+		grid-template-columns: 1fr;
+	}
+
+	.img{
+		display: none;
+	}
+
+	.wave{
+		display: none;
+	}
+
+	.login-content{
+		justify-content: center;
+	}
+}

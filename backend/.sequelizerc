@@ -1,0 +1,16 @@
+const path = require('path');
+const fs = require('fs');
+
+const distMigrations = path.resolve('dist', 'database', 'migrations');
+const srcMigrations = path.resolve('src', 'database', 'migrations');
+// Preferir dist (.js compilado). sequelize-cli 5 só carrega .js.
+const migrationsPath = fs.existsSync(distMigrations)
+  ? distMigrations
+  : srcMigrations;
+
+module.exports = {
+  'config': path.resolve('config', 'database.js'),
+  'models-path': path.resolve('dist', 'models'),
+  'seeders-path': path.resolve('dist', 'database', 'seeds'),
+  'migrations-path': migrationsPath
+};

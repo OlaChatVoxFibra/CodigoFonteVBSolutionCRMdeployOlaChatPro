@@ -1,0 +1,98 @@
+@import "tailwindcss";
+@plugin "tailwindcss-animate";
+@import "./design-tokens.css";
+
+/* Escaneia todo src/ (componentes, páginas, planos Brain, etc.) */
+@source "..";
+
+@theme {
+  --font-sans: var(--font-ui);
+  --font-display: var(--font-display);
+  --font-mono: "Roboto Mono", ui-monospace, monospace;
+
+  /* Landing / CRM brand */
+  --color-vb-ink: var(--vb-ink);
+  --color-vb-crm-blue: var(--vb-crm-blue);
+  --color-vb-muted: var(--vb-muted);
+  --color-vb-border: var(--vb-border);
+  --color-vb-ash: var(--vb-ash);
+
+  --color-background: #ffffff;
+  --color-foreground: var(--vb-ink);
+  --color-card: #ffffff;
+  --color-card-foreground: var(--vb-ink);
+  --color-popover: #ffffff;
+  --color-popover-foreground: var(--vb-ink);
+  --color-primary: var(--vb-crm-blue);
+  --color-primary-foreground: #ffffff;
+  --color-secondary: var(--vb-ash);
+  --color-secondary-foreground: var(--vb-ink);
+  --color-muted: var(--vb-ash);
+  --color-muted-foreground: var(--vb-muted);
+  --color-accent: var(--vb-ash);
+  --color-accent-foreground: var(--vb-ink);
+  --color-destructive: #ef4444;
+  --color-border: var(--vb-border);
+  --color-input: var(--vb-border);
+  --color-ring: var(--vb-crm-blue);
+
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    font-family: var(--font-ui);
+    color: var(--vb-ink);
+  }
+}
+
+@keyframes gradient-shift {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes border-beam {
+  100% {
+    offset-distance: 100%;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes shine {
+  0% {
+    background-position: 0% 0%;
+  }
+  50% {
+    background-position: 100% 100%;
+  }
+  100% {
+    background-position: 0% 0%;
+  }
+}
+
+@theme {
+  --animate-border-beam: border-beam calc(var(--duration, 12) * 1s) infinite linear;
+  --animate-shimmer: shimmer 2.5s ease-in-out infinite;
+  --animate-shine: shine var(--duration, 14s) linear infinite;
+}
