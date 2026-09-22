@@ -1,13 +1,24 @@
 # Configuração Railway (RAIZ DO REPO) para o backend OlaChat Pro CRM.
-# Service: SERVIDOR BACKEND CRM (contexto = raiz do monorepo).
+# Service: SERVIDOR BACKEND CRM.
+# Builder = DOCKERFILE. O Dockerfile Path é escolhido na UI do Railway:
+#   • Dockerfile (raiz)   → runtime fica em /app/backend
+#   • /backend/Dockerfile → runtime fica em /app
+# Para GARANTIR funcionamento independente de qual Dockerfile/caminho for usado:
+#   • Container monta symlink duplo: /app ↔ /app/backend (ambos existem sempre)
+#   • docker-entrypoint.sh detecta layout e sempre roda a partir da pasta correta.
+#   • startCommand abaixo também é resiliente e tenta AMBAS as pastas.
 
 [build]
 builder = "DOCKERFILE"
+# IMPORTANTE: Defina esse valor também na UI → Settings → Build → Dockerfile Path.
+# Recomendado = "Dockerfile" (usa o da raiz). Mas se na UI estiver "/backend/Dockerfile"
+# os symlinks dentro do container garantem que o startCommand abaixo também funciona.
 dockerfilePath = "Dockerfile"
 
 [deploy]
-# start-production.js: roda prepare-and-migrate (migrations com timeout) + executa dist/server.js
-startCommand = "cd /app/backend && node scripts/start-production.js"
+# Layout resiliente: encontre a pasta onde está scripts/start-production.js e rode.
+# Funciona tanto para /app quanto para /app/backend sem mudar nada.
+startCommand = "cd /app/backend 2>/dev/null || cd /app ; ls -la && node scripts/start-production.js"
 healthcheckPath = "/health"
 healthcheckTimeout = 180
 restartPolicyType = "ON_FAILURE"

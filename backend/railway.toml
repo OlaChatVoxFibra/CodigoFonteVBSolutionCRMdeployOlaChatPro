@@ -5,6 +5,7 @@
 # NOTA: o Dockerfile desta pasta foi reescrito para funcionar com AMBOS os contextos:
 #   • build context = raiz do repositório  (padrão Railway ao conectar repo inteiro)
 #   • build context = ./backend            (se Railway rootDirectory = backend)
+# Em ambos os casos, o runtime cria symlink bidirecional /app ↔ /app/backend.
 
 [build]
 builder = "DOCKERFILE"
@@ -12,8 +13,8 @@ builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"
 
 [deploy]
-# Entrypoint dentro do container. Dockerfile desta pasta coloca o app em WORKDIR /app.
-startCommand = "node scripts/start-production.js"
+# Layout resiliente (igual ao do railway.toml da raiz). Funciona em qualquer um dos dois layouts.
+startCommand = "cd /app/backend 2>/dev/null || cd /app ; ls -la && node scripts/start-production.js"
 healthcheckPath = "/health"
 healthcheckTimeout = 180
 restartPolicyType = "ON_FAILURE"
