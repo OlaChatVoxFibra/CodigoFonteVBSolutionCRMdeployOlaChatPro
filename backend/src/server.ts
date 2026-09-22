@@ -126,7 +126,16 @@ function startServer(portToUse: number) {
           "./services/TelegramUserServices/StartAllTelegramUserSessions"
         );
         const BullQueue = (await import("./libs/queue")).default;
-        const { startQueueProcess } = await import("./queues");
+        const queuesMod = await import("./queues");
+        const { startQueueProcess } = queuesMod;
+        try {
+          app.set("queues", {
+            messageQueue: queuesMod.messageQueue,
+            sendScheduledMessages: queuesMod.sendScheduledMessages
+          });
+        } catch {
+          /* ignore */
+        }
         const { startLidSyncJob } = await import("./jobs/LidSyncJob");
         const {
           repairStuckWhatsAppOficialConnections,

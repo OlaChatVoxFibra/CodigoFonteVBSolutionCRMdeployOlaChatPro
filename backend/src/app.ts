@@ -21,11 +21,8 @@ import uploadConfig from "./config/upload";
 import AppError from "./errors/AppError";
 import routes from "./routes";
 import logger from "./utils/logger";
-import { messageQueue, sendScheduledMessages } from "./queues";
-import BullQueue from "./libs/queue"
 import BullBoard from 'bull-board';
 import basicAuth from 'basic-auth';
-import "./emailQueues";
 import { registerMcpHttpRoutes } from "./routes/mcpHttpRoutes";
 import { registerMcpBrandRoutes } from "./services/McpHttpServices/mcpBrandAssets";
 
@@ -48,21 +45,32 @@ Sentry.init({ dsn: process.env.SENTRY_DSN });
 
 const app = express();
 
-// Configuração de filas
+// Filas: placeholders — carregadas depois do listen (evita 502 no Railway por Redis no boot)
 app.set("queues", {
-  messageQueue,
-  sendScheduledMessages
+  messageQueue: null,
+  sendScheduledMessages: null
 });
 
 import { getCorsAllowedOrigins } from "./utils/appUrlUtils";
 
 const allowedOrigins = getCorsAllowedOrigins();
 
-// Configuração do BullBoard
-if (String(process.env.BULL_BOARD).toLocaleLowerCase() === 'true' && process.env.REDIS_URI_ACK !== '') {
-  BullBoard.setQueues(BullQueue.queues.map(queue => queue && queue.bull));
-  app.use('/admin/queues', isBullAuth, BullBoard.UI);
-}
+// BullBoard opcional — só após Redis (lazy)
+void (async () => {
+  try {
+    if (
+      String(process.env.BULL_BOARD || "").toLowerCase() !== "true" ||
+      !String(process.env.REDIS_URI_ACK || process.env.REDIS_URI || process.env.REDIS_URL || "").trim()
+    ) {
+      return;
+    }
+    const BullQueue = (await import("./libs/queue")).default;
+    BullBoard.setQueues(BullQueue.queues.map(queue => queue && queue.bull));
+    app.use("/admin/queues", isBullAuth, BullBoard.UI);
+  } catch (err: any) {
+    logger.warn({ msg: "BullBoard não montado", error: err?.message || String(err) });
+  }
+})();
 
 // Middlewares
 // Helmet desativado por CSP customizada; reativar quando necessário
