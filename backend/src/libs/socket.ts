@@ -26,52 +26,15 @@ export const initIO = (httpServer: Server): SocketIO => {
   io = new SocketIO(httpServer, {
     cors: {
       origin: (origin, callback) => {
+        // Socket.io com credentials: true NÃO PODE USAR ORIGIN TRUE (gera *).
+        // Quando existe origin, ECOAMOS a origem exata.
         if (!origin) {
-          return callback(null, true);
+          return callback(null, "*");
         }
-        if (allowedEnv.length === 0 && process.env.NODE_ENV !== "production") {
-          // Ambiente de desenvolvimento: liberar localhost
-          if (/^http:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin)) {
-            return callback(null, true);
-          }
-        }
-        if (
-          allowedEnv.includes(origin) ||
-          /\.vercel\.app$/i.test(origin) ||
-          /\.railway\.app$/i.test(origin) ||
-          /\.olachatpro\.com\.br$/i.test(origin) ||
-          /^https:\/\/(www\.)?olachatpro\.com\.br$/i.test(origin)
-        ) {
-          return callback(null, true);
-        }
-        if (/^http:\/\/localhost:(5173|5174|3000|3001|8081|8082|5181)$/.test(origin)) {
-          return callback(null, true);
-        }
-        // Produção com FRONTEND_URL/WEB_ORIGIN: ainda libera HTTPS custom se env vazia não listou
-        if (process.env.NODE_ENV === "production" && /^https:\/\//i.test(origin)) {
-          const allowedHosts = allowedEnv
-            .map((o) => {
-              try {
-                return new URL(o).hostname.replace(/^www\./, "");
-              } catch {
-                return "";
-              }
-            })
-            .filter(Boolean);
-          try {
-            const host = new URL(origin).hostname.replace(/^www\./, "");
-            if (allowedHosts.includes(host)) {
-              return callback(null, true);
-            }
-          } catch {
-            /* ignore */
-          }
-        }
-        // Fallback permissivo (mesmo padrão do Express CORS) para não quebrar Socket em custom domains
-        return callback(null, true);
+        return callback(null, origin);
       },
       methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-      allowedHeaders: ["authorization", "content-type", "*"],
+      allowedHeaders: ["authorization", "content-type"],
       credentials: true
     }
   });

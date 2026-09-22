@@ -76,6 +76,48 @@ void (async () => {
 // Helmet desativado por CSP customizada; reativar quando necessário
 
 app.use(compression()); // Compressão HTTP
+
+// -----------------------------------------------------------------------------
+// CORS MANUAL (DEFINITIVO) — NÃO usa o pacote "cors" do Express.
+// Regras: sempre ecoa a origem exata (ou *) + credentials:true + responde OPTIONS 204.
+// Isso garante que "Access-Control-Allow-Origin: *" + credentials NÃO acontece
+// (nunca usamos wildcard quando temos origin).
+// -----------------------------------------------------------------------------
+app.use((req: Request, res: Response, next: NextFunction) => {
+  const origin = req.header("Origin");
+
+  // Com origin conhecida: ECOAMOS exatamente a origem (não wildcard) — obrigatório para credentials.
+  if (origin) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Vary", "Origin");
+  } else {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+  }
+
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Authorization, Content-Type, Accept, X-Requested-With, token, companyid, companyId, userid, userId, env-token, x-csrf-token, Origin, X-JWT-Token, X-Socket-Id, apollo-require-preflight"
+  );
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD"
+  );
+  res.setHeader(
+    "Access-Control-Expose-Headers",
+    "X-Total-Count, Content-Disposition, Content-Length, X-JWT-Token"
+  );
+  res.setHeader("Access-Control-Max-Age", "7200");
+
+  // Responder imediatamente ao preflight OPTIONS com 204 sem passar por outros middlewares
+  if (req.method === "OPTIONS") {
+    res.statusCode = 204;
+    return res.end();
+  }
+
+  return next();
+});
+
 // Captura o corpo bruto para validação de assinatura de webhooks (Meta)
 app.use(
   bodyParser.json({
@@ -92,38 +134,6 @@ app.use(
 ); // Aumentar o limite de carga para 5 MB
 app.use(bodyParser.urlencoded({ limit: '12mb', extended: true }));
 
-app.use(
-  cors({
-    credentials: true,
-    origin: (origin, callback) => {
-      // Requests sem origin (curl, server-to-server) são liberados (Access-Control-Allow-Origin não é setado).
-      if (!origin) return callback(null, true);
-
-      // IMPORTANTE: com credentials:true, NÃO PODEMOS retornar Access-Control-Allow-Origin: *;
-      // a especificação exige origem EXATA. Por isso sempre retornamos `origin` como string,
-      // nunca true ou wildcard. A validação é feita antes; em caso de dúvida, ainda ecoamos a origem
-      // (plataformas com subdomínios dinâmicos).
-      const explicitlyAllowed =
-        allowedOrigins.includes(origin) ||
-        origin.endsWith(".vercel.app") ||
-        origin.endsWith(".railway.app") ||
-        origin.endsWith(".up.railway.app") ||
-        origin.endsWith(".rlwy.app") ||
-        origin === "https://olachatpro.com.br" ||
-        origin === "https://www.olachatpro.com.br" ||
-        origin === "http://olachatpro.com.br" ||
-        origin === "http://www.olachatpro.com.br";
-
-      if (explicitlyAllowed) {
-        return callback(null, origin);
-      }
-
-      // Fallback permissivo — ecoa a origem para preservar credentials.
-      // (Ajuste para bloqueio estrito se necessário.)
-      return callback(null, origin);
-    }
-  })
-);
 app.use(cookieParser());
 // Não usar express.json() aqui: o body já é parseado por bodyParser.json acima;
 // um segundo parser pode esvaziar/duplicar o corpo e quebrar PUT/POST com JSON grande (ex.: agente IA).
