@@ -274,12 +274,17 @@ const CreateEventDrawer = ({ open, onClose, onSave, initialDate, initialContactI
           // ignore
         }
       })();
-      const base = initialDate || new Date();
-      let timeStart = toTimeInputValue(base, "start");
+      const raw = initialDate || new Date();
+      const base =
+        raw instanceof Date && !Number.isNaN(raw.getTime())
+          ? raw
+          : new Date(raw);
+      const safeBase = Number.isNaN(base.getTime()) ? new Date() : base;
+      let timeStart = toTimeInputValue(safeBase, "start");
       let timeEnd = DEFAULT_END_TIME;
-      if (base.getHours() !== 0 || base.getMinutes() !== 0) {
-        timeStart = `${String(base.getHours()).padStart(2, "0")}:${String(base.getMinutes()).padStart(2, "0")}`;
-        const endSlot = new Date(base);
+      if (safeBase.getHours() !== 0 || safeBase.getMinutes() !== 0) {
+        timeStart = `${String(safeBase.getHours()).padStart(2, "0")}:${String(safeBase.getMinutes()).padStart(2, "0")}`;
+        const endSlot = new Date(safeBase);
         endSlot.setHours(endSlot.getHours() + 1);
         timeEnd = `${String(endSlot.getHours()).padStart(2, "0")}:${String(endSlot.getMinutes()).padStart(2, "0")}`;
       }
@@ -287,8 +292,8 @@ const CreateEventDrawer = ({ open, onClose, onSave, initialDate, initialContactI
         ...prev,
         title: "",
         description: "",
-        dateStart: toDateInputValue(base),
-        dateEnd: toDateInputValue(base),
+        dateStart: toDateInputValue(safeBase),
+        dateEnd: toDateInputValue(safeBase),
         timeStart,
         timeEnd,
         color: "#D1FAE5",

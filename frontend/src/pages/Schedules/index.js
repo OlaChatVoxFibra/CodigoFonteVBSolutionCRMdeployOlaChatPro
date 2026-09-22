@@ -416,7 +416,14 @@ const Schedules = () => {
   };
 
   const handleOpenEventDrawer = (date) => {
-    setDrawerInitialDate(date || new Date());
+    let next = new Date();
+    if (date instanceof Date && !Number.isNaN(date.getTime())) {
+      next = date;
+    } else if (date) {
+      const parsed = new Date(date);
+      if (!Number.isNaN(parsed.getTime())) next = parsed;
+    }
+    setDrawerInitialDate(next);
     setEventDrawerOpen(true);
   };
 

@@ -565,7 +565,7 @@ export default function CompaniesManager({ stripeLinks = null }) {
   const handleCancel = () => {
     setRecord({
       id: undefined, name: "", email: "", phone: "", planId: "", status: true,
-      dueDate: "", recurrence: "MENSAL", password: "", document: "",
+      dueDate: "2099-12-31", recurrence: "MENSAL", password: "", document: "",
       paymentMethod: "", generateInvoice: true,
     });
   };
@@ -574,7 +574,7 @@ export default function CompaniesManager({ stripeLinks = null }) {
     setRecord({
       id: data.id, name: data.name || "", phone: data.phone || "",
       email: data.email || "", planId: data.planId || "",
-      status: data.status !== false, dueDate: data.dueDate || "",
+      status: data.status !== false, dueDate: data.dueDate || "2099-12-31",
       recurrence: data.recurrence || "MENSAL", password: "",
       document: data.document || "", paymentMethod: data.paymentMethod || "",
       generateInvoice: data.generateInvoice !== undefined ? data.generateInvoice : true,
