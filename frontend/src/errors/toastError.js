@@ -41,12 +41,19 @@ const toastError = (err) => {
     !status || status >= 500 || err?.message === "Network Error" || err?.code === "ECONNABORTED";
 
   if (isNetworkOrServer) {
-    // Silencia erros de infraestrutura (ex.: DB/servidor indisponível) para não poluir a UI
-    // Mantém log para diagnóstico em dev (sem referenciar process diretamente)
+    const reqUrl = String(err?.config?.url || "");
+    if (reqUrl.includes("auth/login")) {
+      toast.error(
+        "Servidor temporariamente indisponível. Aguarde o backend subir e tente novamente.",
+        { toastId: "auth-backend-down", autoClose: 8000 }
+      );
+      return;
+    }
+
     const isDevEnv =
-      (typeof process !== "undefined" &&
-        process.env &&
-        process.env.NODE_ENV !== "production");
+      typeof process !== "undefined" &&
+      process.env &&
+      process.env.NODE_ENV !== "production";
     if (isDevEnv) {
       // eslint-disable-next-line no-console
       console.warn("[toastError] Silenciado erro de servidor/rede:", err);

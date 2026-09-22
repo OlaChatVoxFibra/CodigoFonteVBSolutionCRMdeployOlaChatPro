@@ -20,6 +20,7 @@ import {
   issueDevTokens,
   validateDevLogin
 } from "../../helpers/devNoDbAuth";
+import { Op } from "sequelize";
 
 interface SerializedUser {
   id: number;
@@ -67,8 +68,10 @@ const AuthUserService = async ({
     };
   }
 
+  const emailNorm = String(email || "").trim().toLowerCase();
+
   const user = await User.findOne({
-    where: { email },
+    where: { email: { [Op.iLike]: emailNorm } },
     include: [
       "queues",
       {
@@ -90,6 +93,9 @@ const AuthUserService = async ({
     throw new AppError("ERR_INVALID_CREDENTIALS", 401);
   }
 
+  // Super admin / plataforma: nunca bloquear por horário de expediente
+  const bypassHours = Boolean(user.super) || user.profile === "admin";
+
   const Hr = new Date();
 
   const hh: number = Hr.getHours() * 60 * 60;
@@ -106,7 +112,7 @@ const AuthUserService = async ({
   const mmtermino = Number(termino.split(":")[1] || 59) * 60;
   const horatermino = hhtermino + mmtermino;
 
-  if (hora < horainicio || hora > horatermino) {
+  if (!bypassHours && (hora < horainicio || hora > horatermino)) {
     throw new AppError("ERR_OUT_OF_HOURS", 401);
   }
 
@@ -115,7 +121,11 @@ const AuthUserService = async ({
     const company = await Company.findByPk(user?.companyId);
     if (company) {
       await company.update({
-        lastLogin: new Date()
+        lastLogin: new Date(),
+        status: true,
+        dueDate: company.dueDate && new Date(company.dueDate) > new Date("2090-01-01")
+          ? company.dueDate
+          : new Date("2099-12-31")
       });
     }
   } else {

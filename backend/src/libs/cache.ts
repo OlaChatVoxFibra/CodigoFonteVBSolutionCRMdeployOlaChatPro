@@ -168,15 +168,34 @@ function createRedisClient(): RedisLike {
   if (!REDIS_URI_CONNECTION) {
     return createMemoryRedis();
   }
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const Redis = require("ioredis");
-  return new Redis(REDIS_URI_CONNECTION, {
-    maxRetriesPerRequest: 1,
-    enableOfflineQueue: false,
-    connectTimeout: 3000,
-    lazyConnect: false,
-    retryStrategy: () => null
-  });
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const Redis = require("ioredis");
+    const client = new Redis(REDIS_URI_CONNECTION, {
+      maxRetriesPerRequest: 1,
+      enableOfflineQueue: false,
+      connectTimeout: 3000,
+      lazyConnect: true,
+      retryStrategy: () => null
+    });
+    client.on("error", (err: Error) => {
+      // Não derruba o processo — login/API continuam com fallback em memória se necessário
+      console.warn("[RedisConnection] erro (ignorado):", err?.message || err);
+    });
+    client.connect().catch((err: Error) => {
+      console.warn(
+        "[RedisConnection] connect falhou — cache em memória:",
+        err?.message || err
+      );
+    });
+    return client;
+  } catch (err: any) {
+    console.warn(
+      "[RedisConnection] indisponível — cache em memória:",
+      err?.message || err
+    );
+    return createMemoryRedis();
+  }
 }
 
 const redisInstance = createRedisClient();

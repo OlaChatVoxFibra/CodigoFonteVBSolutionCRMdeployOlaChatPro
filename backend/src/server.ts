@@ -150,7 +150,21 @@ function startServer(portToUse: number) {
   startServer(preferredPort);
 })();
 
+function isIgnorableInfraError(err: any): boolean {
+  const msg = String(err?.message || err?.name || err || "");
+  return /WRONGPASS|NOAUTH|ECONNREFUSED|ENOTFOUND|ETIMEDOUT|ECONNRESET|Redis|Connection is closed|MaxRetriesPerRequest|READONLY|OOM command not allowed/i.test(
+    msg
+  );
+}
+
 process.on("uncaughtException", err => {
+  if (isIgnorableInfraError(err)) {
+    logger.warn({
+      msg: "uncaughtException (infra — processo mantido)",
+      error: err.message
+    });
+    return;
+  }
   logger.error({ msg: "uncaughtException", error: err.message, stack: err.stack?.split("\n")[0] });
   process.exit(1);
 });
@@ -163,6 +177,13 @@ process.on("unhandledRejection", (reason: any, p: any) => {
     /SequelizeConnectionRefusedError|ECONNREFUSED|ConnectionRefused/i.test(msg)
   ) {
     logger.warn("DEV_NO_DB: ignorando tentativa de conexão Postgres (esperado sem banco)");
+    return;
+  }
+  if (isIgnorableInfraError(reason)) {
+    logger.warn({
+      msg: "unhandledRejection (infra — processo mantido)",
+      reason: String(reason)
+    });
     return;
   }
   logger.error({ msg: "unhandledRejection", reason: String(reason), promise: String(p) });
