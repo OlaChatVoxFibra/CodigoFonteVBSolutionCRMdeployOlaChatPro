@@ -25,6 +25,7 @@ import BullBoard from 'bull-board';
 import basicAuth from 'basic-auth';
 import { registerMcpHttpRoutes } from "./routes/mcpHttpRoutes";
 import { registerMcpBrandRoutes } from "./services/McpHttpServices/mcpBrandAssets";
+import { getCorsAllowedOrigins } from "./utils/appUrlUtils";
 
 // Função de middleware para autenticação básica
 export const isBullAuth = (req, res, next) => {
@@ -50,19 +51,43 @@ const app = express();
 // NÃO depende do pacote "cors" do Express, do compression, do bodyParser ou de nenhum outro middleware.
 // Isso garante que OPTIONS (preflight) e TODAS as respostas (incluindo erro 4xx/5xx)
 // sempre incluirão os headers de CORS.
+//
+// Regras seguindo especificação W3C Fetch:
+//   • Access-Control-Allow-Origin = "*" é INCOMPATÍVEL com Access-Control-Allow-Credentials = "true".
+//     → NÃO enviamos credentials quando Allow-Origin é wildcard.
+//   • Sempre echoamos Origin apenas se ela estiver na lista permitida.
+//   • Se não houver Origin (ex.: requisição server-to-server), permitimos wildcard sem credentials.
 // -----------------------------------------------------------------------------
 const applyCorsHeaders = (req: Request, res: Response) => {
-  const origin = req.header("Origin");
+  const origin = (req.header("Origin") || "").trim();
+  const allowed = new Set<string>(
+    (getCorsAllowedOrigins() || []).map(o => o.toLowerCase())
+  );
+  // Sempre permitir origins locais/dinamicas — fallback permissivo para dev + ambientes Railway/preview
+  const allowAnyOrigin = String(process.env.CORS_ALLOW_ANY || "true").toLowerCase() !== "false";
+
+  let originAccepted: string | null = null;
   if (origin) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
-    res.setHeader("Vary", "Origin");
-  } else if (!res.getHeader("Access-Control-Allow-Origin")) {
-    res.setHeader("Access-Control-Allow-Origin", "*");
+    const o = origin.toLowerCase();
+    if (allowed.has(o) || allowAnyOrigin) {
+      originAccepted = origin;
+    }
   }
-  res.setHeader("Access-Control-Allow-Credentials", "true");
+
+  if (originAccepted) {
+    res.setHeader("Access-Control-Allow-Origin", originAccepted);
+    res.setHeader("Vary", "Origin");
+    // Credentials só permitidos com origin específica (NÃO com wildcard)
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+  } else if (!res.getHeader("Access-Control-Allow-Origin")) {
+    // Sem origin ou origin não permitido: wildcard (apenas para requisições simples)
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    // Nunca enviamos credentials com wildcard → incompatibilidade bloqueada no Chrome/Firefox/Safari
+  }
+
   res.setHeader(
     "Access-Control-Allow-Headers",
-    "Authorization, Content-Type, Accept, X-Requested-With, token, companyid, companyId, userid, userId, env-token, x-csrf-token, Origin, X-JWT-Token, X-Socket-Id, apollo-require-preflight"
+    "Authorization, Content-Type, Accept, X-Requested-With, token, companyid, companyId, userid, userId, env-token, x-csrf-token, Origin, X-JWT-Token, X-Socket-Id, x-refresh-token, apollo-require-preflight"
   );
   res.setHeader(
     "Access-Control-Allow-Methods",
@@ -93,8 +118,6 @@ app.set("queues", {
   messageQueue: null,
   sendScheduledMessages: null
 });
-
-import { getCorsAllowedOrigins } from "./utils/appUrlUtils";
 
 const allowedOrigins = getCorsAllowedOrigins();
 

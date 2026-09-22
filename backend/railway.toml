@@ -1,13 +1,19 @@
-# railway.toml da PASTA ./backend (BACKUP/FALLBACK).
+# railway.toml da PASTA ./backend (FALLBACK / COERÊNCIA).
 # O arquivo principal de deploy é /railway.toml na RAIZ do repositório.
 # Este existe apenas para retrocompatibilidade caso o Railway esteja apontando aqui.
+#
+# NOTA: o Dockerfile desta pasta foi reescrito para funcionar com AMBOS os contextos:
+#   • build context = raiz do repositório  (padrão Railway ao conectar repo inteiro)
+#   • build context = ./backend            (se Railway rootDirectory = backend)
 
 [build]
 builder = "DOCKERFILE"
-dockerfilePath = "backend/Dockerfile"
+# Caminho RELATIVO ao rootDirectory configurado no Railway / build context.
+dockerfilePath = "Dockerfile"
 
 [deploy]
-startCommand = "cd /app/backend 2>/dev/null || true ; node scripts/start-production.js"
+# Entrypoint dentro do container. Dockerfile desta pasta coloca o app em WORKDIR /app.
+startCommand = "node scripts/start-production.js"
 healthcheckPath = "/health"
 healthcheckTimeout = 180
 restartPolicyType = "ON_FAILURE"
