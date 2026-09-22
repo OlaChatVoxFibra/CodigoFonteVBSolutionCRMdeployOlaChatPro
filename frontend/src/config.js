@@ -22,11 +22,21 @@ function normalizeBackendUrl(input) {
     if (/^wss?:\/\//i.test(url)) {
         url = url.replace(/^ws/i, "http");
     }
+    // Host Railway/Vercel sem protocolo → sempre HTTPS (evita mixed content no domínio)
+    if (/^[a-z0-9.-]+\.(railway\.app|vercel\.app)(\/.*)?$/i.test(url)) {
+        return `https://${url}`.replace(/\/+$/, "");
+    }
     if (/^https?:\/\//i.test(url)) {
         return url.replace(/\/+$/, "");
     }
     if (/^[\w.-]+(?::\d+)?(\/.*)?$/.test(url)) {
-        return `http://${url}`.replace(/\/+$/, "");
+        // Em produção no browser HTTPS, forçar https; local continua http
+        const isBrowserHttps =
+            typeof window !== "undefined" &&
+            window.location &&
+            window.location.protocol === "https:";
+        const scheme = isBrowserHttps ? "https" : "http";
+        return `${scheme}://${url}`.replace(/\/+$/, "");
     }
     try {
         const abs = new URL(url, typeof window !== "undefined" ? window.location.origin : DEFAULT_BACKEND_URL);
