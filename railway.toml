@@ -1,12 +1,14 @@
-# Monorepo: serviço backend fica em /backend
+# Configuração Railway (RAIZ DO REPO) para o backend OlaChat Pro CRM.
+# Service: SERVIDOR BACKEND CRM (contexto = raiz do monorepo).
+
 [build]
 builder = "DOCKERFILE"
-dockerfilePath = "backend/Dockerfile"
-watchPatterns = ["backend/**"]
+dockerfilePath = "Dockerfile"
 
 [deploy]
-startCommand = "node dist/server.js"
+# start-production.js: roda prepare-and-migrate (migrations com timeout) + executa dist/server.js
+startCommand = "cd /app/backend && node scripts/start-production.js"
 healthcheckPath = "/health"
-healthcheckTimeout = 120
+healthcheckTimeout = 180
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10

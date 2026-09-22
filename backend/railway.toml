@@ -1,10 +1,14 @@
+# railway.toml da PASTA ./backend (BACKUP/FALLBACK).
+# O arquivo principal de deploy é /railway.toml na RAIZ do repositório.
+# Este existe apenas para retrocompatibilidade caso o Railway esteja apontando aqui.
+
 [build]
 builder = "DOCKERFILE"
-dockerfilePath = "Dockerfile"
+dockerfilePath = "backend/Dockerfile"
 
 [deploy]
-startCommand = "node scripts/start-production.js"
+startCommand = "cd /app/backend 2>/dev/null || true ; node scripts/start-production.js"
 healthcheckPath = "/health"
-healthcheckTimeout = 120
+healthcheckTimeout = 180
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
