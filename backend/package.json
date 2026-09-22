@@ -7,7 +7,7 @@
     "build": "node node_modules/typescript/bin/tsc --skipLibCheck",
     "watch": "tsc -w",
     "dev": "npm run dev:server",
-    "start": "node scripts/start-production.js",
+    "start": "node dist/server.js",
     "start:migrate": "node scripts/start-production.js",
     "start:server": "node dist/server.js",
     "migrate:build": "npm run build && node scripts/prepare-and-migrate.js",

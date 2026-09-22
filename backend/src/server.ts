@@ -44,10 +44,12 @@ import { alignCompanyModelToDatabase } from "./helpers/alignCompanyModelToDataba
 import "./emailQueues";
 
 const preferredPort = Number(process.env.PORT) || 3000;
+/** Railway / Docker: precisa bind em 0.0.0.0 — senão fica Online com 502 no edge. */
+const listenHost = process.env.LISTEN_HOST || "0.0.0.0";
 
 function startServer(portToUse: number) {
-  const server = app.listen(portToUse, () => {
-    logger.info(`Servidor iniciado na porta ${portToUse}`);
+  const server = app.listen(portToUse, listenHost, () => {
+    logger.info(`Servidor iniciado em http://${listenHost}:${portToUse}`);
     initIO(server);
     gracefulShutdown(server);
 
@@ -57,6 +59,17 @@ function startServer(portToUse: number) {
         if (isDevNoDb()) {
           logger.info("DEV_NO_DB ativo — pulando sessões WhatsApp/filas/Telegram (sem banco)");
           return;
+        }
+
+        // Align/migrate leve DEPOIS do listen (não bloqueia /health nem /auth/login)
+        try {
+          await ensureDatabase();
+          await alignCompanyModelToDatabase();
+        } catch (e: any) {
+          logger.error({
+            msg: "ensureDatabase pós-listen",
+            error: e?.message || String(e)
+          });
         }
 
         const companies = await Company.findAll({
@@ -131,24 +144,9 @@ function startServer(portToUse: number) {
   });
 }
 
-(async () => {
-  const { isDevNoDb } = await import("./helpers/devNoDbAuth");
-  if (isDevNoDb()) {
-    logger.info("DEV_NO_DB=true — boot sem PostgreSQL (login local ativo)");
-  } else {
-    logger.info("Boot: iniciando ensureDatabase");
-    try {
-      await ensureDatabase();
-      logger.info("Boot: ensureDatabase finalizado");
-      await alignCompanyModelToDatabase();
-      logger.info("Boot: alignCompanyModelToDatabase finalizado");
-    } catch (e: any) {
-      logger.error({ msg: "ensureDatabase (pré-boot)", error: e?.message || String(e) });
-    }
-  }
-  logger.info("Boot: iniciando startServer");
-  startServer(preferredPort);
-})();
+// Escuta IMEDIATAMENTE — Railway health/proxy não pode esperar migrate/DB
+logger.info(`Boot: startServer imediato porta=${preferredPort} host=${listenHost}`);
+startServer(preferredPort);
 
 function isIgnorableInfraError(err: any): boolean {
   const msg = String(err?.message || err?.name || err || "");

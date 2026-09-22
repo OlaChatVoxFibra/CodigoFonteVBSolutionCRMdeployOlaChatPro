@@ -25,7 +25,10 @@ COPY --from=builder /app/scripts ./scripts
 COPY --from=builder /app/config ./config
 COPY --from=builder /app/.sequelizerc ./.sequelizerc
 
+ENV NODE_ENV=production
+ENV LISTEN_HOST=0.0.0.0
+
 EXPOSE 8080
 
-# start-production: migrate com timeout; SEMPRE sobe a API (evita 502 no Railway)
-CMD ["node", "scripts/start-production.js"]
+# Sobe a API na hora (sem migrate bloqueando). Schema já está no Postgres.
+CMD ["node", "dist/server.js"]
