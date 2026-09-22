@@ -21,10 +21,11 @@ RUN npm ci --omit=dev
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/src/database/migrations ./src/database/migrations
-COPY --from=builder /app/scripts/prepare-and-migrate.js ./scripts/prepare-and-migrate.js
+COPY --from=builder /app/scripts ./scripts
 COPY --from=builder /app/config ./config
 COPY --from=builder /app/.sequelizerc ./.sequelizerc
 
 EXPOSE 8080
 
-CMD ["sh", "-c", "node scripts/prepare-and-migrate.js && node dist/server.js"]
+# start-production: migrate com timeout; SEMPRE sobe a API (evita 502 no Railway)
+CMD ["node", "scripts/start-production.js"]
