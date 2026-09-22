@@ -106,6 +106,15 @@ function startServer(portToUse: number) {
         try {
           await ensureDatabase();
           await alignCompanyModelToDatabase();
+          try {
+            const { ensureAdminUser } = await import("./helpers/ensureAdminUser");
+            await ensureAdminUser();
+          } catch (seedErr: any) {
+            logger.warn({
+              msg: "ensureAdminUser (seed admin não bloqueante)",
+              error: seedErr?.message || String(seedErr)
+            });
+          }
         } catch (e: any) {
           logger.error({
             msg: "ensureDatabase pós-listen",

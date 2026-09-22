@@ -70,8 +70,24 @@ const AuthUserService = async ({
 
   const emailNorm = String(email || "").trim().toLowerCase();
 
+  const adminCandidates: string[] = [emailNorm];
+  const knownAdminSet = new Set(
+    [
+      process.env.SEED_ADMIN_EMAIL,
+      process.env.SEED_ADMIN_ALT_EMAIL,
+      "admin@dev.local",
+      "admin@local.dev"
+    ]
+      .map((v) => String(v || "").trim().toLowerCase())
+      .filter(Boolean)
+  );
+  if (knownAdminSet.has(emailNorm)) {
+    knownAdminSet.forEach((e) => adminCandidates.push(e));
+  }
+  const uniqueCandidates = [...new Set(adminCandidates.filter(Boolean))];
+
   const user = await User.findOne({
-    where: { email: { [Op.iLike]: emailNorm } },
+    where: { email: { [Op.iLike]: { [Op.any]: uniqueCandidates } } },
     include: [
       "queues",
       {

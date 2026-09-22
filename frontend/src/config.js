@@ -22,25 +22,40 @@ function normalizeBackendUrl(input) {
     if (/^wss?:\/\//i.test(url)) {
         url = url.replace(/^ws/i, "http");
     }
+    const isBrowserHttps =
+        typeof window !== "undefined" &&
+        window.location &&
+        window.location.protocol === "https:";
+    const isCloudDomain = (s) =>
+        /\.(railway\.app|vercel\.app|up\.railway\.app|rlwy\.app)(\/|:|$)/i.test(s);
     // Host Railway/Vercel sem protocolo → sempre HTTPS (evita mixed content no domínio)
-    if (/^[a-z0-9.-]+\.(railway\.app|vercel\.app)(\/.*)?$/i.test(url)) {
+    if (/^[a-z0-9.-]+\.(railway\.app|vercel\.app|up\.railway\.app|rlwy\.app)(\/.*)?$/i.test(url)) {
         return `https://${url}`.replace(/\/+$/, "");
     }
     if (/^https?:\/\//i.test(url)) {
-        return url.replace(/\/+$/, "");
+        // Se já tem protocolo, forçar HTTPS para Railway/Vercel ou quando frontend está em HTTPS (não-local)
+        const parsed = url.replace(/\/+$/, "");
+        const hasProto = /^http:\/\/(.*)$/i.exec(parsed);
+        if (hasProto) {
+            const rest = hasProto[1];
+            const isLocal = /^(localhost|127\.0\.0\.1|0\.0\.0\.0)(:\d+)?(\/|$)/i.test(rest);
+            if (!isLocal && (isCloudDomain(rest) || isBrowserHttps)) {
+                return `https://${rest}`;
+            }
+        }
+        return parsed;
     }
     if (/^[\w.-]+(?::\d+)?(\/.*)?$/.test(url)) {
-        // Em produção no browser HTTPS, forçar https; local continua http
-        const isBrowserHttps =
-            typeof window !== "undefined" &&
-            window.location &&
-            window.location.protocol === "https:";
-        const scheme = isBrowserHttps ? "https" : "http";
+        const scheme = isBrowserHttps || isCloudDomain(url) ? "https" : "http";
         return `${scheme}://${url}`.replace(/\/+$/, "");
     }
     try {
         const abs = new URL(url, typeof window !== "undefined" ? window.location.origin : DEFAULT_BACKEND_URL);
-        return abs.origin.replace(/\/+$/, "");
+        const origin = abs.origin.replace(/\/+$/, "");
+        if (/^http:\/\//i.test(origin) && isBrowserHttps && !/localhost|127\.0\.0\.1/i.test(origin)) {
+            return origin.replace(/^http:\/\//i, "https://");
+        }
+        return origin;
     } catch {
         return "";
     }
