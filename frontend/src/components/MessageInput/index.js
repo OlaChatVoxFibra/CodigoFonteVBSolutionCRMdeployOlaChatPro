@@ -1957,7 +1957,12 @@ const MessageInput = ({
 
         const messageBody = value.value && value.value.trim() !== "" ? value.value : "";
 
-        await handleUploadQuickMessageMedia(response.data, messageBody, value.mediaType);
+        await handleUploadQuickMessageMedia(
+          response.data,
+          messageBody,
+          value.mediaType,
+          value.mediaPath
+        );
 
         console.log("✅ Mídia enviada com sucesso");
 
@@ -2119,12 +2124,13 @@ const MessageInput = ({
     }
   }, [variableBar]);
 
-  const handleUploadQuickMessageMedia = useCallback(async (blob, message, mediaType = null) => {
+  const handleUploadQuickMessageMedia = useCallback(async (blob, message, mediaType = null, mediaPathHint = null) => {
     console.log("📤 Iniciando upload de mídia:", {
       blobSize: blob.size,
       message,
       mediaType,
-      ticketId
+      ticketId,
+      mediaPathHint
     });
 
     if (!ticketId) {
@@ -2138,29 +2144,76 @@ const MessageInput = ({
     }
 
     try {
-      let extension = 'bin';
+      let extension = "bin";
+      let mimeType = blob.type || "";
 
-      if (blob.type) {
-        const mimeType = blob.type.split("/")[1];
-        extension = mimeType;
+      if (mediaPathHint) {
+        const pathExt = String(mediaPathHint).split("?")[0].split(".").pop();
+        if (pathExt && pathExt.length <= 5) {
+          extension = pathExt.toLowerCase();
+        }
+      }
 
-        if (blob.type.includes('webm') || blob.type.includes('audio')) {
-          extension = blob.type.includes('webm') ? 'webm' : 'mp3';
+      if (mimeType) {
+        const mimePart = mimeType.split("/")[1];
+        if (mimePart) {
+          extension = mimePart.includes("webm")
+            ? "webm"
+            : mimePart.includes("jpeg")
+              ? "jpg"
+              : mimePart.split(";")[0] || extension;
+        }
+        if (mimeType.includes("webm") || (mimeType.includes("audio") && !extension)) {
+          extension = mimeType.includes("webm") ? "webm" : "ogg";
         }
       } else if (mediaType) {
         const typeExtensionMap = {
-          'audio': 'webm',
-          'image': 'jpg',
-          'video': 'mp4',
-          'document': 'pdf'
+          audio: "ogg",
+          image: "jpg",
+          video: "mp4",
+          document: "pdf"
         };
-        extension = typeExtensionMap[mediaType] || 'bin';
+        extension = typeExtensionMap[mediaType] || extension || "bin";
+        const mimeMap = {
+          audio: "audio/ogg",
+          image: "image/jpeg",
+          video: "video/mp4",
+          document: "application/pdf"
+        };
+        mimeType = mimeMap[mediaType] || "application/octet-stream";
+      }
+
+      // Garantir MIME a partir da extensão quando o blob vier sem type (comum no download)
+      if (!mimeType || mimeType === "application/octet-stream") {
+        const extMime = {
+          jpg: "image/jpeg",
+          jpeg: "image/jpeg",
+          png: "image/png",
+          webp: "image/webp",
+          gif: "image/gif",
+          mp4: "video/mp4",
+          pdf: "application/pdf",
+          ogg: "audio/ogg",
+          opus: "audio/ogg",
+          mp3: "audio/mpeg",
+          webm: "audio/webm",
+          doc: "application/msword",
+          docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          xls: "application/vnd.ms-excel",
+          xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        };
+        mimeType = extMime[extension] || "application/octet-stream";
       }
 
       const formData = new FormData();
       const filename = `${new Date().getTime()}.${extension}`;
-      formData.append("medias", blob, filename);
-      formData.append("typeArch", "quickMessage");
+      const fileForUpload =
+        blob instanceof File
+          ? blob
+          : new File([blob], filename, { type: mimeType });
+      formData.append("medias", fileForUpload, filename);
+      // Não usar typeArch=quickMessage no envio do ticket — senão o arquivo
+      // vai para companyX/quickMessage/ e o Message.mediaUrl quebra.
 
       const body = message && message.trim() !== ""
         ? (privateMessage ? `\u200d${message}` : message)
@@ -2170,7 +2223,7 @@ const MessageInput = ({
       formData.append("fromMe", true);
       formData.append("isPrivate", privateMessage ? "true" : "false");
 
-      console.log("📤 Enviando para:", `/messages/${ticketId}`);
+      console.log("📤 Enviando para:", `/messages/${ticketId}`, { filename, mimeType });
 
       if (isMounted.current) {
         const response = await api.post(`/messages/${ticketId}`, formData);

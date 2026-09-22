@@ -178,12 +178,14 @@ export interface IMetaMessageTemplateComponents {
 }
 
 export interface IMetaMessageTemplateComponentsParameters {
-    type: 'location' | 'currency' | 'date_time' | 'text' | 'payload' | 'location' | 'url' | 'image' | 'video';
+    type: 'location' | 'currency' | 'date_time' | 'text' | 'payload' | 'location' | 'url' | 'image' | 'video' | 'document';
     text?: string;
     url?: string;    
     location?: IMetaMessageTemplateComponentsParametersLocation
     currency?: IMetaMessageTemplateComponentsParametersCurrency;
     image?: IMetaMessageTemplateComponentsParametersImage;
+    video?: IMetaMessageTemplateComponentsParametersImage;
+    document?: IMetaMessageTemplateComponentsParametersImage;
     date_time?: IMetaMessageTemplateComponentsParametersDateTime;
     payload?: string;
 }
@@ -202,7 +204,9 @@ export interface IMetaMessageTemplateComponentsParametersCurrency {
 }
 
 export interface IMetaMessageTemplateComponentsParametersImage {
-    link: string;
+    link?: string;
+    id?: string;
+    filename?: string;
 }
 
 export interface IMetaMessageTemplateComponentsParametersDateTime {

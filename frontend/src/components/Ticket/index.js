@@ -198,18 +198,19 @@ const Ticket = () => {
 
   const handleQuickMessageSelect = (quickMessage) => {
     try {
-      if (quickMessage.message) {
-        // Disparar evento que o MessageInput vai escutar
-        const event = new CustomEvent('insertQuickMessage', {
-          detail: { message: quickMessage.message }
-        });
-        window.dispatchEvent(event);
-        
-      }
-      
-      if (quickMessage.mediaPath) {
-        // Tratar mídia se necessário
-      }
+      const event = new CustomEvent("insertQuickMessage", {
+        detail: {
+          quickMessage: {
+            id: quickMessage.id,
+            message: quickMessage.message || "",
+            shortcode: quickMessage.shortcode || "",
+            mediaPath: quickMessage.mediaPath || null,
+            mediaType: quickMessage.mediaType || null,
+            value: quickMessage.message || ""
+          }
+        }
+      });
+      window.dispatchEvent(event);
     } catch (error) {
       console.error("Erro ao inserir resposta rápida:", error);
       toastError("Erro ao inserir resposta rápida");

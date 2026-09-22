@@ -6,19 +6,31 @@
 # Para GARANTIR funcionamento independente de qual Dockerfile/caminho for usado:
 #   • Container monta symlink duplo: /app ↔ /app/backend (ambos existem sempre)
 #   • docker-entrypoint.sh detecta layout e sempre roda a partir da pasta correta.
-#   • startCommand abaixo também é resiliente e tenta AMBAS as pastas.
+# Configuração Railway (RAIZ DO REPO) para o backend OlaChat Pro CRM.
+# Service: SERVIDOR BACKEND CRM.
+# Builder = DOCKERFILE. O Dockerfile Path é escolhido na UI do Railway:
+#   • Dockerfile (raiz)   → runtime fica em /app/backend
+#   • /backend/Dockerfile → runtime fica em /app
+#
+# IMPORTANTE SOBRE startCommand:
+#   Ele SOBRESCREVE o CMD do Dockerfile. COMENTADO de propósito: o CMD
+#   padrão de AMBOS os Dockerfiles chama ./scripts/docker-entrypoint.sh,
+#   que já é resiliente aos dois layouts (faz cd auto para /app ou /app/backend).
+#   Se houver startCommand definido AQUI, ele usa o cwd imprevisto e pode crashar
+#   de forma silenciosa (Railway mostra "Active" mas entrega "Application not found").
+#
+#   Se precisar customizar, use SEMPRE o entrypoint, ex.:
+#     startCommand = "./scripts/docker-entrypoint.sh"
+#   nunca um comando manual tipo "cd ... && node ...".
 
 [build]
 builder = "DOCKERFILE"
-# IMPORTANTE: Defina esse valor também na UI → Settings → Build → Dockerfile Path.
-# Recomendado = "Dockerfile" (usa o da raiz). Mas se na UI estiver "/backend/Dockerfile"
-# os symlinks dentro do container garantem que o startCommand abaixo também funciona.
 dockerfilePath = "Dockerfile"
 
 [deploy]
-# Layout resiliente: encontre a pasta onde está scripts/start-production.js e rode.
-# Funciona tanto para /app quanto para /app/backend sem mudar nada.
-startCommand = "cd /app/backend 2>/dev/null || cd /app ; ls -la && node scripts/start-production.js"
+# startCommand COMENTADO — deixa CMD do Dockerfile (./scripts/docker-entrypoint.sh)
+# que funciona nos 2 layouts e já faz migrate + spawn do server com banners de debug.
+# startCommand = "./scripts/docker-entrypoint.sh"
 healthcheckPath = "/health"
 healthcheckTimeout = 180
 restartPolicyType = "ON_FAILURE"

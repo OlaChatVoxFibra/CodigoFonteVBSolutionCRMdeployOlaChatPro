@@ -129,6 +129,25 @@ const TemplateModal = ({
       buttons: []
     };
 
+    const hasMetaSampleMedia = (component) => {
+      let example = component?.example;
+      if (!example) return false;
+      if (typeof example === "string") {
+        try {
+          example = JSON.parse(example);
+        } catch {
+          return false;
+        }
+      }
+      const handles = []
+        .concat(example.header_handle || [])
+        .concat(example.header_url || [])
+        .concat(example.header_urls || []);
+      return handles.some(
+        (h) => typeof h === "string" && /^https:\/\//i.test(h.trim())
+      );
+    };
+
     (components || []).forEach((component) => {
       const type = String(component.type || "").toUpperCase();
       const format = String(component.format || "TEXT").toUpperCase();
@@ -136,10 +155,15 @@ const TemplateModal = ({
 
       if (type === "HEADER") {
         if (["IMAGE", "VIDEO", "DOCUMENT"].includes(format)) {
+          const autoFromMeta = hasMetaSampleMedia(component);
           result.header.push({
             index: 1,
-            prompt: `URL da mídia do HEADER (${format})`,
-            kind: format.toLowerCase()
+            prompt: autoFromMeta
+              ? `URL da mídia (opcional — a amostra da Meta será usada automaticamente)`
+              : `URL pública da mídia do HEADER (${format}) — obrigatória se o template não tiver amostra`,
+            kind: format.toLowerCase(),
+            optional: autoFromMeta,
+            mediaHeader: true
           });
           return;
         }
@@ -393,6 +417,14 @@ const TemplateModal = ({
                       size="small"
                       variant="outlined"
                       margin="dense"
+                      required={!variable?.optional && !variable?.mediaHeader}
+                      helperText={
+                        variable?.mediaHeader
+                          ? variable?.optional
+                            ? "Deixe em branco para usar a mídia de amostra do template Meta."
+                            : "Se o template não tiver amostra sincronizada, informe uma URL HTTPS pública."
+                          : undefined
+                      }
                     />
                   ))}
                 </Box>

@@ -161,7 +161,11 @@ export async function runWhatsAppOficialCampaignDispatch(
     campaign
   );
 
-  const templatePayload = buildMetaTemplatePayload(template, variables);
+  const templatePayload = await buildMetaTemplatePayload(
+    template,
+    variables,
+    whatsapp
+  );
 
   if (ticket) {
     const bodyPreview =

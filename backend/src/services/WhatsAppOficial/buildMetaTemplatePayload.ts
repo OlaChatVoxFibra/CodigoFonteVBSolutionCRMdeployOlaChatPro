@@ -1,214 +1,245 @@
-/**
- * Copyright (c) Visão Business. Todos os direitos reservados.
- * VB Solution CRM — propriedade intelectual da Visão Business.
- * Uso conforme LICENSE na raiz do repositório.
- */
-
 import QuickMessage from "../../models/QuickMessage";
 import {
   IMetaMessageTemplate,
   IMetaMessageTemplateComponents
 } from "../../libs/whatsAppOficial/IWhatsAppOficial.interfaces";
+import {
+  buildHeaderMediaParameter,
+  resolveMetaTemplateHeaderMedia,
+  extractMetaTemplateHeaderMediaUrls,
+  pickHttpsMediaUrl
+} from "./resolveMetaTemplateHeaderMedia";
+import Whatsapp from "../../models/Whatsapp";
+import axios from "axios";
+import fs from "fs";
+import path from "path";
+import { v4 as uuidv4 } from "uuid";
 
 export type MetaTemplateVariablesInput = Record<
   string,
   Record<string, { value?: string; buttonIndex?: number }>
 >;
 
-const MEDIA_FORMATS = new Set(["IMAGE", "VIDEO", "DOCUMENT"]);
+type TemplateVariables = MetaTemplateVariablesInput;
 
-function normalizeLanguage(code?: string | null): string {
-  const raw = String(code || "pt_BR").trim().replace(/-/g, "_");
-  if (!raw) return "pt_BR";
-  return raw;
-}
+const MEDIA_HEADER_FORMATS = new Set(["IMAGE", "VIDEO", "DOCUMENT"]);
 
-function sortedEntries(
-  bucket: Record<string, { value?: string; buttonIndex?: number }>
-): Array<[string, { value?: string; buttonIndex?: number }]> {
-  return Object.entries(bucket || {}).sort((a, b) => {
-    const na = Number(a[0]);
-    const nb = Number(b[0]);
-    if (Number.isFinite(na) && Number.isFinite(nb)) return na - nb;
-    return String(a[0]).localeCompare(String(b[0]));
-  });
-}
-
-function headerParam(format: string | null | undefined, value: string) {
-  const f = String(format || "TEXT").toUpperCase();
-  const v = String(value || "").trim();
-  if (f === "IMAGE") return { type: "image" as const, image: { link: v } };
-  if (f === "VIDEO") return { type: "video" as const, video: { link: v } };
-  if (f === "DOCUMENT")
-    return { type: "document" as const, document: { link: v } };
-  return { type: "text" as const, text: v };
-}
-
-function parseButtons(raw: any): any[] {
-  if (!raw) return [];
-  if (Array.isArray(raw)) return raw;
-  try {
-    const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
+/**
+ * Na sincronização do template: se a Meta devolver HTTPS na amostra do HEADER,
+ * baixa e guarda em public/companyX/templateMedia e reescreve example com header_url local.
+ */
+export async function cacheMetaTemplateSampleInExample(
+  component: any,
+  companyId: number
+): Promise<any> {
+  const format = String(component?.format || "").toUpperCase();
+  if (!MEDIA_HEADER_FORMATS.has(format)) {
+    return component?.example ?? null;
   }
+
+  let example = component?.example;
+  if (typeof example === "string") {
+    try {
+      example = JSON.parse(example);
+    } catch {
+      example = null;
+    }
+  }
+  if (!example || typeof example !== "object") {
+    example = {};
+  }
+
+  const urls = extractMetaTemplateHeaderMediaUrls({ example });
+  const httpsUrl = pickHttpsMediaUrl(urls);
+  if (!httpsUrl) {
+    return example;
+  }
+
+  // Já cacheado no VB Solution
+  if (
+    Array.isArray(example.header_url) &&
+    example.header_url.some(
+      (u: string) =>
+        typeof u === "string" &&
+        u.includes(`/public/company${companyId}/templateMedia/`)
+    )
+  ) {
+    return example;
+  }
+
+  try {
+    const publicFolder = path.resolve(__dirname, "..", "..", "..", "public");
+    const destDir = path.join(publicFolder, `company${companyId}`, "templateMedia");
+    if (!fs.existsSync(destDir)) {
+      fs.mkdirSync(destDir, { recursive: true });
+    }
+
+    const extGuess =
+      path.extname(new URL(httpsUrl).pathname).split("?")[0] ||
+      (format === "VIDEO" ? ".mp4" : format === "DOCUMENT" ? ".pdf" : ".jpg");
+    const filename = `${uuidv4()}${extGuess}`;
+    const filePath = path.join(destDir, filename);
+
+    const response = await axios.get(httpsUrl, {
+      responseType: "arraybuffer",
+      timeout: 60000,
+      maxRedirects: 5,
+      headers: { "User-Agent": "VBSolution-CRM/1.0", Accept: "*/*" },
+      validateStatus: s => s >= 200 && s < 400
+    });
+    fs.writeFileSync(filePath, Buffer.from(response.data));
+
+    const backendUrl = String(process.env.BACKEND_URL || "").replace(/\/$/, "");
+    const proxyPort = process.env.PROXY_PORT ? `:${process.env.PROXY_PORT}` : "";
+    const publicUrl = backendUrl
+      ? `${backendUrl}${proxyPort}/public/company${companyId}/templateMedia/${filename}`
+      : null;
+
+    if (publicUrl) {
+      example = {
+        ...example,
+        header_url: [publicUrl],
+        header_handle: Array.isArray(example.header_handle)
+          ? [publicUrl, ...example.header_handle]
+          : [publicUrl],
+        vb_cached_media: filename
+      };
+    }
+  } catch (err) {
+    console.warn(
+      "[cacheMetaTemplateSampleInExample] Não foi possível cachear amostra Meta:",
+      (err as any)?.message || err
+    );
+  }
+
+  return example;
 }
 
 /**
- * Monta payload de template Meta a partir de QuickMessage sincronizado + variáveis.
- * Suporta HEADER text/media, BODY, BUTTONS (URL / COPY_CODE). Não envia FOOTER com params.
+ * Monta o payload `template` da Cloud API a partir do QuickMessage (Meta) + variáveis do modal.
+ * HEADER IMAGE/VIDEO/DOCUMENT: usa valor do usuário OU amostra do template Meta (example.header_handle).
  */
-export const buildMetaTemplatePayload = (
+export async function buildMetaTemplatePayload(
   template: QuickMessage,
-  variables: MetaTemplateVariablesInput = {}
-): IMetaMessageTemplate => {
-  const builtComponents: IMetaMessageTemplateComponents[] = [];
+  variables: TemplateVariables = {},
+  whatsapp?: Whatsapp | null
+): Promise<IMetaMessageTemplate> {
   const templateData: IMetaMessageTemplate = {
-    name: String(template.shortcode || "").trim(),
-    language: {
-      code: normalizeLanguage(template.language)
-    }
+    name: template.shortcode,
+    language: { code: template.language }
   };
 
-  if (!templateData.name) {
-    throw new Error("Template Meta sem shortcode (name).");
+  const components = Array.isArray(template.components) ? template.components : [];
+  if (!components.length) {
+    return templateData;
   }
 
-  const components = Array.isArray(template.components)
-    ? template.components
-    : [];
-  const vars = variables || {};
-
-  for (const component of components) {
+  for (let index = 0; index < components.length; index++) {
+    const component = components[index];
     const rawType = String(component.type || "").toUpperCase();
-    if (rawType === "FOOTER") continue;
+    const componentType = rawType.toLowerCase().replace("buttons", "button") as
+      | "header"
+      | "body"
+      | "footer"
+      | "button";
 
-    if (rawType === "HEADER") {
-      const format = String(component.format || "TEXT").toUpperCase();
-      const headerBucket = vars.header || {};
-      const entries = sortedEntries(headerBucket);
+    const varsForType = variables[componentType] || variables[rawType.toLowerCase()] || {};
+    const hasVars = varsForType && Object.keys(varsForType).length > 0;
+    const format = String(component.format || "").toUpperCase();
+    const isMediaHeader =
+      componentType === "header" && MEDIA_HEADER_FORMATS.has(format);
 
-      if (MEDIA_FORMATS.has(format)) {
-        const value = entries[0]?.[1]?.value || "";
-        if (!String(value).trim()) {
-          throw new Error(
-            `Template exige um link de mídia no HEADER (${format}).`
-          );
-        }
-        builtComponents.push({
-          type: "header",
-          parameters: [headerParam(format, value)]
-        } as IMetaMessageTemplateComponents);
-      } else if (entries.length > 0) {
-        builtComponents.push({
-          type: "header",
-          parameters: entries.map(([, e]) =>
-            headerParam("TEXT", e?.value || "")
-          )
-        } as IMetaMessageTemplateComponents);
+    // HEADER de mídia: sempre incluir no payload (mesmo sem variável no modal)
+    if (isMediaHeader) {
+      const firstKey = Object.keys(varsForType)[0];
+      const userValue = firstKey ? varsForType[firstKey]?.value : undefined;
+
+      const resolved = await resolveMetaTemplateHeaderMedia({
+        format,
+        userValue,
+        component,
+        whatsapp: whatsapp || null
+      });
+
+      if (!Array.isArray(templateData.components)) {
+        templateData.components = [];
       }
-      continue;
-    }
-
-    if (rawType === "BODY") {
-      const bodyBucket = vars.body || {};
-      const text = String(component.text || "");
-      const requiredIndexes = Array.from(
-        new Set(
-          [...text.matchAll(/\{\{(\d+)\}\}/g)].map((m) => Number(m[1]))
-        )
-      ).sort((a, b) => a - b);
-
-      const parameters =
-        requiredIndexes.length > 0
-          ? requiredIndexes.map((idx) => {
-              const entry =
-                bodyBucket[String(idx)] ||
-                bodyBucket[idx as unknown as string];
-              return {
-                type: "text" as const,
-                text: String(entry?.value ?? "")
-              };
-            })
-          : sortedEntries(bodyBucket).map(([, e]) => ({
-              type: "text" as const,
-              text: String(e?.value ?? "")
-            }));
-
-      if (parameters.length === 0) continue;
-
-      if (
-        requiredIndexes.length > 0 &&
-        parameters.some((p) => !String(p.text || "").length)
-      ) {
-        throw new Error(
-          `Preencha todas as variáveis do BODY do template ({{${requiredIndexes.join(
-            "}}, {{"
-          )}}}).`
-        );
-      }
-
-      builtComponents.push({
-        type: "body",
-        parameters
+      templateData.components.push({
+        type: "header",
+        parameters: [buildHeaderMediaParameter(resolved)]
       } as IMetaMessageTemplateComponents);
       continue;
     }
 
-    if (rawType === "BUTTONS" || rawType === "BUTTON") {
-      const buttons = parseButtons(component.buttons);
-      const buttonBucket = vars.button || vars.buttons || {};
-      const entries = sortedEntries(buttonBucket);
-
-      buttons.forEach((button: any, btnIndex: number) => {
-        const btnType = String(button?.type || "").toUpperCase();
-        // QUICK_REPLY não precisa de parameters no envio
-        if (btnType === "QUICK_REPLY") return;
-
-        const match = entries.find(
-          ([, e]) =>
-            Number(e?.buttonIndex) === btnIndex ||
-            Number(e?.buttonIndex) === Number(button?.index)
-        );
-        if (!match && btnType !== "URL" && btnType !== "COPY_CODE") return;
-
-        // URL estático sem variável dinâmica: não enviar componente button
-        if (btnType === "URL" && !match && !String(button?.example || "").includes("{{")) {
-          return;
-        }
-
-        const value = String(match?.[1]?.value ?? "").trim();
-        if ((btnType === "URL" || btnType === "COPY_CODE") && !value) {
-          // sem valor, pula (template pode ter URL fixa)
-          if (btnType === "COPY_CODE") {
-            throw new Error("Template exige o código do cupom no botão COPY_CODE.");
-          }
-          return;
-        }
-
-        const parameters: any[] = [];
-        if (btnType === "COPY_CODE") {
-          parameters.push({ type: "coupon_code", coupon_code: value });
-        } else if (btnType === "URL") {
-          parameters.push({ type: "text", text: value });
-        }
-
-        if (parameters.length === 0) return;
-
-        builtComponents.push({
-          type: "button",
-          sub_type: btnType.toLowerCase(),
-          index: String(btnIndex),
-          parameters
-        } as IMetaMessageTemplateComponents);
-      });
+    if (!hasVars) {
+      continue;
     }
-  }
 
-  if (builtComponents.length > 0) {
-    templateData.components = builtComponents;
+    let newComponent: any;
+
+    if (componentType === "button") {
+      let buttons: any[] = [];
+      try {
+        buttons =
+          typeof component.buttons === "string"
+            ? JSON.parse(component.buttons)
+            : Array.isArray(component.buttons)
+              ? component.buttons
+              : [];
+      } catch {
+        buttons = [];
+      }
+
+      Object.values(varsForType).forEach((sub: any) => {
+        const btnIndex = Number(sub?.buttonIndex ?? 0);
+        const button = buttons[btnIndex] || {};
+        const buttonType = String(button.type || "QUICK_REPLY").toUpperCase();
+
+        const btnComponent: any = {
+          type: "button",
+          sub_type: buttonType,
+          index: btnIndex,
+          parameters: []
+        };
+
+        if (buttonType === "COPY_CODE") {
+          btnComponent.parameters.push({
+            type: "coupon_code",
+            coupon_code: sub?.value
+          });
+        } else {
+          btnComponent.parameters.push({
+            type: "text",
+            text: sub?.value
+          });
+        }
+
+        if (!Array.isArray(templateData.components)) {
+          templateData.components = [];
+        }
+        templateData.components.push(btnComponent);
+      });
+      continue;
+    }
+
+    newComponent = {
+      type: componentType,
+      parameters: [] as any[]
+    };
+
+    Object.keys(varsForType).forEach(key => {
+      const variableValue = varsForType[key]?.value;
+      newComponent.parameters.push({
+        type: "text",
+        text: variableValue
+      });
+    });
+
+    if (!Array.isArray(templateData.components)) {
+      templateData.components = [];
+    }
+    templateData.components.push(newComponent as IMetaMessageTemplateComponents);
   }
 
   return templateData;
-};
+}

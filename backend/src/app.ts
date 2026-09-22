@@ -100,6 +100,8 @@ const applyCorsHeaders = (req: Request, res: Response) => {
   res.setHeader("Access-Control-Max-Age", "7200");
 };
 
+console.log("[app.ts:stage-1] applyCorsHeaders definida.");
+
 // Rotas OPTIONS no topo: intercepta QUALQUER OPTIONS antes de passar pela cadeia inteira
 app.options("/*", (req: Request, res: Response) => {
   applyCorsHeaders(req, res);
@@ -113,6 +115,8 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   return next();
 });
 
+console.log("[app.ts:stage-2] Middleware CORS global + OPTIONS preflight instalados.");
+
 // Filas: placeholders — carregadas depois do listen (evita 502 no Railway por Redis no boot)
 app.set("queues", {
   messageQueue: null,
@@ -120,6 +124,7 @@ app.set("queues", {
 });
 
 const allowedOrigins = getCorsAllowedOrigins();
+console.log("[app.ts:stage-3] allowedOrigins =", JSON.stringify(allowedOrigins));
 
 // BullBoard opcional — só após Redis (lazy)
 void (async () => {
@@ -128,11 +133,13 @@ void (async () => {
       String(process.env.BULL_BOARD || "").toLowerCase() !== "true" ||
       !String(process.env.REDIS_URI_ACK || process.env.REDIS_URI || process.env.REDIS_URL || "").trim()
     ) {
+      console.log("[app.ts:stage-4] BullBoard SKIPPADO (BULL_BOARD!=true ou REDIS vazio).");
       return;
     }
     const BullQueue = (await import("./libs/queue")).default;
     BullBoard.setQueues(BullQueue.queues.map(queue => queue && queue.bull));
     app.use("/admin/queues", isBullAuth, BullBoard.UI);
+    console.log("[app.ts:stage-4] BullBoard OK em /admin/queues.");
   } catch (err: any) {
     logger.warn({ msg: "BullBoard não montado", error: err?.message || String(err) });
   }
@@ -142,6 +149,7 @@ void (async () => {
 // Helmet desativado por CSP customizada; reativar quando necessário
 
 app.use(compression()); // Compressão HTTP
+console.log("[app.ts:stage-5] compression() instalado.");
 
 // Captura o corpo bruto para validação de assinatura de webhooks (Meta)
 app.use(
@@ -158,11 +166,13 @@ app.use(
   })
 ); // Aumentar o limite de carga para 5 MB
 app.use(bodyParser.urlencoded({ limit: '12mb', extended: true }));
+console.log("[app.ts:stage-6] bodyParser.json + urlencoded instalados.");
 
 app.use(cookieParser());
 // Não usar express.json() aqui: o body já é parseado por bodyParser.json acima;
 // um segundo parser pode esvaziar/duplicar o corpo e quebrar PUT/POST com JSON grande (ex.: agente IA).
 app.use(Sentry.Handlers.requestHandler());
+console.log("[app.ts:stage-7] cookieParser + Sentry requestHandler OK.");
 
 /** Rotas JSON em /public/* (não são arquivos estáticos). */
 const isPublicApiRoute = (path: string) =>
@@ -182,11 +192,17 @@ app.use("/public", (req, res, next) => {
 });
 
 app.get("/", (_req, res) => res.json({ ok: true }));
-app.get("/health", (_req, res) => res.json({ ok: true }));
+app.get("/health", (_req, res) => res.json({ ok: true, stage: "health-route-montada", ts: new Date().toISOString() }));
 app.get("/healthz", (_req, res) => res.json({ ok: true }));
+console.log("[app.ts:stage-8] Rotas / , /health, /healthz, /public instaladas.");
 
 // Favicon / branding VBSolution (Claude, OAuth authorize, browsers)
-registerMcpBrandRoutes(app);
+try {
+  registerMcpBrandRoutes(app);
+  console.log("[app.ts:stage-9] registerMcpBrandRoutes OK.");
+} catch (err) {
+  logger.error({ err }, "[app.ts:stage-9] registerMcpBrandRoutes FALHOU — continuando sem.");
+}
 
 // MCP HTTP remoto (Claude Web, etc.) — OAuth + /mcp antes das rotas JWT
 try {
@@ -200,8 +216,10 @@ try {
     })
   );
   logger.info("[MCP HTTP] Rotas OAuth e /mcp montadas");
+  console.log("[app.ts:stage-10] registerMcpHttpRoutes OK.");
 } catch (err) {
   logger.error({ err }, "[MCP HTTP] Falha ao montar rotas OAuth/MCP");
+  console.log("[app.ts:stage-10] registerMcpHttpRoutes FALHOU — continuando sem /mcp.");
   app.get("/mcp/status", (_req, res) =>
     res.status(503).json({
       ok: false,
@@ -212,10 +230,20 @@ try {
 }
 
 // Rotas
-app.use(routes);
+console.log("[app.ts:stage-11] Chamando app.use(routes) — IMPORTANDO ROTEAMENTO.");
+try {
+  app.use(routes);
+  console.log("[app.ts:stage-11] app.use(routes) OK. Todas as rotas instaladas.");
+} catch (err: any) {
+  // Se o import/rotas falharem, ao invés de crashar o processo, continuamos.
+  // Health ainda funciona, e o deploy logs mostram QUAL foi o erro.
+  console.error("[app.ts:stage-11] app.use(routes) FALHOU. Erro:", err?.stack || err?.message || String(err));
+  logger.error({ err }, "Falha MONTAGEM DE ROTAS. app.use(routes) deu throw.");
+}
 
 // Manipulador de erros do Sentry
 app.use(Sentry.Handlers.errorHandler());
+console.log("[app.ts:stage-12] Sentry errorHandler OK.");
 
 // Middleware de tratamento de erros
 app.use(async (err: Error, req: Request, res: Response, _: NextFunction) => {
@@ -230,6 +258,7 @@ app.use(async (err: Error, req: Request, res: Response, _: NextFunction) => {
   logger.error(err);
   return res.status(500).json({ error: "Internal server error" });
 });
+console.log("[app.ts:stage-13] Tratamento de erros + 404 fallback instalando...");
 
 // Fallback 404 final: qualquer rota não reconhecida volta JSON com CORS
 app.use((req: Request, res: Response) => {

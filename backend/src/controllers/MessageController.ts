@@ -340,89 +340,27 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
             throw new AppError("Template não encontrado", 400);
           }
 
-          let templateData: IMetaMessageTemplate = {
-            name: template.shortcode,
-            language: { code: template.language }
-          };
-
-          let buttonsToSave: any[] = [];
-          if (variables && Object.keys(variables).length > 0) {
-            templateData = {
-              name: template.shortcode,
-              language: { code: template.language }
-            };
-
-            if (Array.isArray(template.components) && template.components.length > 0) {
-              template.components.forEach((component, index) => {
-                const componentType = component.type.toLowerCase() as "header" | "body" | "footer" | "button";
-                if (variables[componentType] && Object.keys(variables[componentType]).length > 0) {
-                  let newComponent: any;
-
-                  if (componentType.replace("buttons", "button") === "button") {
-                    const buttons = JSON.parse(component.buttons);
-                    buttons.forEach((button, btnIndex) => {
-                      const subButton = Object.values(variables[componentType]);
-                      subButton.forEach((sub: any) => {
-                        if (sub.buttonIndex === btnIndex) {
-                          const buttonType = button.type;
-                          newComponent = {
-                            type: componentType.replace("buttons", "button"),
-                            sub_type: buttonType,
-                            index: btnIndex,
-                            parameters: []
-                          };
-                        }
-                      });
-                    });
-                  } else {
-                    newComponent = {
-                      type: componentType,
-                      parameters: []
-                    };
-                  }
-
-                  if (newComponent) {
-                    Object.keys(variables[componentType]).forEach(key => {
-                      if (componentType.replace("buttons", "button") === "button") {
-                        if ((newComponent as any)?.sub_type === "COPY_CODE") {
-                          newComponent.parameters.push({
-                            type: "coupon_code",
-                            coupon_code: variables[componentType][key].value
-                          });
-                        } else {
-                          newComponent.parameters.push({
-                            type: "text",
-                            text: variables[componentType][key].value
-                          });
-                        }
-                      } else {
-                        if (template.components[index].format === 'IMAGE') {
-                          newComponent.parameters.push({
-                            type: "image",
-                            image: { link: variables[componentType][key].value }
-                          });
-                        } else {
-                          const variableValue = variables[componentType][key].value;
-                          newComponent.parameters.push({
-                            type: "text",
-                            text: variableValue
-                          });
-                        }
-                      }
-                    });
-                  }
-                  if (!Array.isArray(templateData.components)) {
-                    templateData.components = [];
-                  }
-                  templateData.components.push(newComponent as IMetaMessageTemplateComponents);
-                }
-              });
-            }
+          let templateData: IMetaMessageTemplate;
+          try {
+            const whatsapp =
+              ticket.whatsapp ||
+              (ticket.whatsappId ? await Whatsapp.findByPk(ticket.whatsappId) : null);
+            templateData = await buildMetaTemplatePayload(
+              template,
+              variables || {},
+              whatsapp
+            );
+          } catch (buildErr: any) {
+            throw new AppError(
+              buildErr?.message || "Não foi possível montar o payload do template Meta.",
+              400
+            );
           }
 
-          if (template.components.length > 0) {
+          let buttonsToSave: any[] = [];
+          if (Array.isArray(template.components) && template.components.length > 0) {
             for (const component of template.components) {
-              if (component.type === 'BUTTONS') {
+              if (String(component.type || "").toUpperCase() === "BUTTONS") {
                 buttonsToSave.push(component.buttons);
               }
             }
@@ -852,7 +790,14 @@ export const storeTemplate = async (req: Request, res: Response): Promise<Respon
 
   let templateData: IMetaMessageTemplate;
   try {
-    templateData = buildMetaTemplatePayload(template, variables || {});
+    const whatsapp =
+      ticket.whatsapp ||
+      (ticket.whatsappId ? await Whatsapp.findByPk(ticket.whatsappId) : null);
+    templateData = await buildMetaTemplatePayload(
+      template,
+      variables || {},
+      whatsapp
+    );
   } catch (buildErr: any) {
     throw new AppError(
       buildErr?.message || "Não foi possível montar o payload do template Meta.",

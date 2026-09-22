@@ -6,7 +6,23 @@
 
 import "dotenv/config";
 import dns from "dns";
+import path from "path";
+import fs from "fs";
 import gracefulShutdown from "http-graceful-shutdown";
+
+// =============================================================================
+// BANNER server.ts (DEVE ser a 1a coisa impressa pós import app).
+// Serve p/ validar nos Railway Deploy Logs se a inicialização do server passou
+// do "require('./app')" — se não aparecer esse banner, app.ts crashou no import.
+// =============================================================================
+console.log("==================================================");
+console.log("[server.ts:entry] server.js BEGIN (dist/server.js executou).");
+console.log(`[server.ts:entry]   process.cwd = ${process.cwd()}`);
+console.log(`[server.ts:entry]   __filename  = ${__filename}`);
+console.log(`[server.ts:entry]   __dirname   = ${__dirname}`);
+console.log(`[server.ts:entry]   package.json em cwd existe? ${fs.existsSync(path.join(process.cwd(), "package.json")) ? "SIM" : "NAO"}`);
+console.log(`[server.ts:entry]   package.json em __dirname/.. existe? ${fs.existsSync(path.join(__dirname, "..", "package.json")) ? "SIM" : "NAO"}`);
+console.log("==================================================");
 
 if (typeof dns.setDefaultResultOrder === "function") {
   dns.setDefaultResultOrder("ipv4first");
@@ -28,11 +44,39 @@ process.emit = function (event, ...args) {
   return originalEmit.apply(this, [event, ...args]);
 };
 
+// =============================================================================
+// Catch ALL 100% — nada deixa o processo morrer sem LOGAR PRIMEIRO,
+// exceto EADDRINUSE (porta ocupada, que já tem tratamento).
+// Isso garante que se QUALQUER coisa (import, require, bootstrap) lançar,
+// nós veremos o erro ANTES do Railway matar o container.
+// =============================================================================
+process.on("uncaughtException", err => {
+  console.error("[server.ts:uncaughtException] STACK:", err?.stack || err?.message || String(err));
+  try {
+    logger.error({ msg: "uncaughtException", error: err?.message, stack: (err?.stack || "").split("\n")[0] });
+  } catch { /* ignore */ }
+  // Delay de 5s p/ Railway conseguir gravar o log do erro ANTES de morrer
+  setTimeout(() => process.exit(1), 5000);
+});
+
+process.on("unhandledRejection", (reason: any, p: any) => {
+  console.error("[server.ts:unhandledRejection] reason:", (reason && reason.stack) || String(reason), "| promise:", String(p));
+  try {
+    logger.error({ msg: "unhandledRejection", reason: String(reason), promise: String(p) });
+  } catch { /* ignore */ }
+  // Não fazemos exit — se for erro de Redis/DB a aplicação segue (filtro já no isIgnorableInfraError).
+});
+
 // Imports leves primeiro — HTTP sobe antes de Redis/Bull/WhatsApp
+console.log("[server.ts:stage-1] importando app from './app'...");
 import app from "./app";
+console.log("[server.ts:stage-1] import app OK. (Se apareceu stage-13 no log do app, rotas montadas.)");
+
+console.log("[server.ts:stage-2] importando socket, logger, redis...");
 import { initIO } from "./libs/socket";
 import logger from "./utils/logger";
 import { REDIS_URI_MSG_CONN } from "./config/redis";
+console.log("[server.ts:stage-2] imports socket/logger/redis OK.");
 
 const preferredPort = Number(process.env.PORT) || 3000;
 /** Railway / Docker: precisa bind em 0.0.0.0 — senão fica Online com 502 no edge. */
@@ -45,48 +89,16 @@ function isIgnorableInfraError(err: any): boolean {
   );
 }
 
-process.on("uncaughtException", err => {
-  if (isIgnorableInfraError(err)) {
-    logger.warn({
-      msg: "uncaughtException (infra — processo mantido)",
-      error: err.message
-    });
-    return;
-  }
-  logger.error({ msg: "uncaughtException", error: err.message, stack: err.stack?.split("\n")[0] });
-  process.exit(1);
-});
-
-process.on("unhandledRejection", (reason: any, p: any) => {
-  const msg = String(reason?.name || reason || "");
-  try {
-    const { isDevNoDb } = require("./helpers/devNoDbAuth");
-    if (
-      isDevNoDb() &&
-      /SequelizeConnectionRefusedError|ECONNREFUSED|ConnectionRefused/i.test(msg)
-    ) {
-      logger.warn("DEV_NO_DB: ignorando tentativa de conexão Postgres (esperado sem banco)");
-      return;
-    }
-  } catch {
-    /* ignore */
-  }
-  if (isIgnorableInfraError(reason)) {
-    logger.warn({
-      msg: "unhandledRejection (infra — processo mantido)",
-      reason: String(reason)
-    });
-    return;
-  }
-  logger.error({ msg: "unhandledRejection", reason: String(reason), promise: String(p) });
-});
-
 function startServer(portToUse: number) {
+  console.log(`[server.ts:startServer] Chamando app.listen(${portToUse}, ${listenHost})`);
   const server = app.listen(portToUse, listenHost, () => {
+    console.log(`[server.ts:listen-callback] ✅ app.listen OK. Servidor ouvindo em http://${listenHost}:${portToUse}`);
     logger.info(`Servidor iniciado em http://${listenHost}:${portToUse}`);
     try {
       initIO(server);
+      console.log("[server.ts:listen-callback] initIO OK.");
     } catch (e: any) {
+      console.error("[server.ts:listen-callback] initIO FALHOU. Erro:", e?.stack || e?.message || String(e));
       logger.error({ msg: "initIO falhou (API segue)", error: e?.message || String(e) });
     }
     gracefulShutdown(server);
@@ -194,6 +206,7 @@ function startServer(portToUse: number) {
   });
 
   server.on("error", (err: any) => {
+    console.error(`[server.ts:server.on(error)] code=${err?.code} msg=${err?.message || String(err)}`);
     if (err?.code === "EADDRINUSE") {
       try {
         const { isDevNoDb } = require("./helpers/devNoDbAuth");
@@ -229,10 +242,11 @@ function startServer(portToUse: number) {
         msg: "Erro ao iniciar o servidor",
         error: err?.message || String(err)
       });
-      process.exit(1);
+      setTimeout(() => process.exit(1), 5000);
     }
   });
 }
 
+console.log(`[server.ts:final] Boot: startServer(${preferredPort}) host=${listenHost}`);
 logger.info(`Boot: startServer imediato porta=${preferredPort} host=${listenHost}`);
 startServer(preferredPort);
