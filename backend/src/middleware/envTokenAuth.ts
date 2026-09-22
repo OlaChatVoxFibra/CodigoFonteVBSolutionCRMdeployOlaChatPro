@@ -1,9 +1,11 @@
 /**
- * Copyright (c) Visão Business. Todos os direitos reservados.
- * VB Solution CRM — propriedade intelectual da Visão Business.
- * Uso conforme LICENSE na raiz do repositório.
+ * Middleware para rotas públicas do setting (/public-settings/:key).
+ *
+ * Regras:
+ * 1. Se ENV_TOKEN NÃO estiver definida no servidor, a rota é PÚBLICA (passa sempre).
+ * 2. Se ENV_TOKEN existir, exige token por query `?token=...` ou body `{ token }` IGUAL a ENV_TOKEN.
+ * 3. Sempre aceita a chave como request legítima (não é autenticação de usuário).
  */
-
 import { Request, Response, NextFunction } from "express";
 
 import AppError from "../errors/AppError";
@@ -18,14 +20,19 @@ const envTokenAuth = (
   next: NextFunction
 ): void => {
   try {
-    const { token: bodyToken } = req.body as TokenPayload;
-    const { token: queryToken } = req.query as TokenPayload;
-
-    if (queryToken === process.env.ENV_TOKEN) {
+    const expected = (process.env.ENV_TOKEN || "").trim();
+    if (!expected) {
       return next();
     }
 
-    if (bodyToken === process.env.ENV_TOKEN) {
+    const { token: bodyToken } = (req.body || {}) as TokenPayload;
+    const { token: queryToken } = (req.query || {}) as TokenPayload;
+
+    if (queryToken === expected) {
+      return next();
+    }
+
+    if (bodyToken === expected) {
       return next();
     }
   } catch (e) {

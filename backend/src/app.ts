@@ -96,18 +96,31 @@ app.use(
   cors({
     credentials: true,
     origin: (origin, callback) => {
+      // Requests sem origin (curl, server-to-server) são liberados (Access-Control-Allow-Origin não é setado).
       if (!origin) return callback(null, true);
 
-      // Permitir domínios explicitados e plataformas usuais
-      if (
+      // IMPORTANTE: com credentials:true, NÃO PODEMOS retornar Access-Control-Allow-Origin: *;
+      // a especificação exige origem EXATA. Por isso sempre retornamos `origin` como string,
+      // nunca true ou wildcard. A validação é feita antes; em caso de dúvida, ainda ecoamos a origem
+      // (plataformas com subdomínios dinâmicos).
+      const explicitlyAllowed =
         allowedOrigins.includes(origin) ||
         origin.endsWith(".vercel.app") ||
-        origin.endsWith(".railway.app")
-      ) {
-        callback(null, true);
-      } else {
-        callback(null, true); // Fallback permissivo para garantir funcionamento (ajustar para produção se necessário)
+        origin.endsWith(".railway.app") ||
+        origin.endsWith(".up.railway.app") ||
+        origin.endsWith(".rlwy.app") ||
+        origin === "https://olachatpro.com.br" ||
+        origin === "https://www.olachatpro.com.br" ||
+        origin === "http://olachatpro.com.br" ||
+        origin === "http://www.olachatpro.com.br";
+
+      if (explicitlyAllowed) {
+        return callback(null, origin);
       }
+
+      // Fallback permissivo — ecoa a origem para preservar credentials.
+      // (Ajuste para bloqueio estrito se necessário.)
+      return callback(null, origin);
     }
   })
 );

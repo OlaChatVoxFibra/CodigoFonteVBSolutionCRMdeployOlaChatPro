@@ -167,6 +167,8 @@ export function getCorsAllowedOrigins(): string[] {
   add("http://localhost:5181");
   add("https://www.olachatpro.com.br");
   add("https://olachatpro.com.br");
+  add("http://www.olachatpro.com.br");
+  add("http://olachatpro.com.br");
 
   return [...set];
 }
