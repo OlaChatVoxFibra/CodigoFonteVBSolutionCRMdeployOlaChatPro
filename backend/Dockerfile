@@ -25,10 +25,12 @@ COPY --from=builder /app/scripts ./scripts
 COPY --from=builder /app/config ./config
 COPY --from=builder /app/.sequelizerc ./.sequelizerc
 
+RUN chmod +x ./scripts/docker-entrypoint.sh
+
 ENV NODE_ENV=production
 ENV LISTEN_HOST=0.0.0.0
 
 EXPOSE 8080
 
 # Sobe a API na hora (sem migrate bloqueando). Schema já está no Postgres.
-CMD ["node", "dist/server.js"]
+CMD ["./scripts/docker-entrypoint.sh"]
