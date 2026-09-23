@@ -23,9 +23,67 @@ function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise
   });
 }
 
+export async function alignUserModelToDatabase(): Promise<void> {
+  try {
+    const qi = sequelize.getQueryInterface();
+    const table: any = await qi.describeTable("Users").catch(() => null);
+    if (!table) return;
+
+    if (!table.finalizacaoComValorVendaAtiva) {
+      await qi.addColumn("Users", "finalizacaoComValorVendaAtiva", {
+        type: (sequelize.Sequelize as any).BOOLEAN,
+        allowNull: true,
+        defaultValue: false
+      }).catch(() => {});
+    }
+    if (!table.ticketVisibility) {
+      await qi.addColumn("Users", "ticketVisibility", {
+        type: (sequelize.Sequelize as any).STRING,
+        allowNull: true,
+        defaultValue: "own_only"
+      }).catch(() => {});
+    }
+    if (!table.allowGroup) {
+      await qi.addColumn("Users", "allowGroup", {
+        type: (sequelize.Sequelize as any).BOOLEAN,
+        allowNull: true,
+        defaultValue: false
+      }).catch(() => {});
+    }
+    if (!table.allHistoric) {
+      await qi.addColumn("Users", "allHistoric", {
+        type: (sequelize.Sequelize as any).STRING,
+        allowNull: true,
+        defaultValue: "disabled"
+      }).catch(() => {});
+    }
+    if (!table.allUserChat) {
+      await qi.addColumn("Users", "allUserChat", {
+        type: (sequelize.Sequelize as any).STRING,
+        allowNull: true,
+        defaultValue: "disabled"
+      }).catch(() => {});
+    }
+    if (!table.userClosePendingTicket) {
+      await qi.addColumn("Users", "userClosePendingTicket", {
+        type: (sequelize.Sequelize as any).STRING,
+        allowNull: true,
+        defaultValue: "enabled"
+      }).catch(() => {});
+    }
+    if (!table.showDashboard) {
+      await qi.addColumn("Users", "showDashboard", {
+        type: (sequelize.Sequelize as any).STRING,
+        allowNull: true,
+        defaultValue: "disabled"
+      }).catch(() => {});
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
 export async function ensureDatabase(): Promise<void> {
-  // Em produção, evitar rodar sequelize-cli via processo externo.
-  // Apenas valida a conexão e retorna; migrações devem ser aplicadas pelo pipeline/deploy.
   try {
     await withTimeout(
       Promise.resolve(sequelize.query("SELECT 1")),
@@ -42,7 +100,16 @@ export async function ensureDatabase(): Promise<void> {
       "ensureDatabase alignCompanyModelToDatabase"
     );
   } catch {
-    /* ignore: evita derrubar boot se information_schema falhar */
+    /* ignore */
+  }
+  try {
+    await withTimeout(
+      alignUserModelToDatabase(),
+      7000,
+      "ensureDatabase alignUserModelToDatabase"
+    );
+  } catch {
+    /* ignore */
   }
   try {
     await withTimeout(
@@ -51,7 +118,7 @@ export async function ensureDatabase(): Promise<void> {
       "ensureDatabase alignPromptModelToDatabase"
     );
   } catch {
-    /* ignore: evita derrubar boot se information_schema falhar */
+    /* ignore */
   }
   try {
     await withTimeout(
@@ -60,7 +127,7 @@ export async function ensureDatabase(): Promise<void> {
       "ensureDatabase autoMigrateAttendanceFlow"
     );
   } catch {
-    /* ignore: stack do agente IA caí em fallback se faltar coluna/tabela */
+    /* ignore */
   }
   try {
     await withTimeout(
@@ -69,7 +136,7 @@ export async function ensureDatabase(): Promise<void> {
       "ensureDatabase autoMigratePromptSmartActions"
     );
   } catch {
-    /* ignore: aba Ações cai em fallback se colunas semânticas não existirem */
+    /* ignore */
   }
   try {
     await withTimeout(

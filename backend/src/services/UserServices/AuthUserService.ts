@@ -86,28 +86,38 @@ const AuthUserService = async ({
   }
   const uniqueCandidates = [...new Set(adminCandidates.filter(Boolean))];
 
-  const user = await User.findOne({
-    where: {
-      [Op.or]: uniqueCandidates.map((c) => ({
-        email: { [Op.iLike]: c }
-      }))
-    },
-    include: [
-      "queues",
-      {
-        model: Company,
-        include: [
-          {
-            model: Plan,
-            as: "plan",
-            attributes: ["id", "name", "trial", "trialDays", "amount"]
-          },
-          { model: CompaniesSettings }
-        ]
+  let user: User | null = null;
+  try {
+    user = await User.findOne({
+      where: {
+        [Op.or]: uniqueCandidates.map((c) => ({
+          email: { [Op.iLike]: c }
+        }))
+      },
+      include: [
+        "queues",
+        {
+          model: Company,
+          include: [
+            {
+              model: Plan,
+              as: "plan",
+              attributes: ["id", "name", "trial", "trialDays", "amount"]
+            },
+            { model: CompaniesSettings }
+          ]
+        }
+      ]
+    });
+  } catch (err: any) {
+    user = await User.findOne({
+      where: {
+        [Op.or]: uniqueCandidates.map((c) => ({
+          email: { [Op.iLike]: c }
+        }))
       }
-    ],
-    attributes: { include: ["finalizacaoComValorVendaAtiva"] }
-  });
+    });
+  }
 
   if (!user) {
     throw new AppError("ERR_INVALID_CREDENTIALS", 401);
