@@ -9,12 +9,10 @@
 
 [build]
 builder = "DOCKERFILE"
-# Caminho RELATIVO ao rootDirectory configurado no Railway / build context.
 dockerfilePath = "Dockerfile"
 
 [deploy]
-# Layout resiliente (igual ao do railway.toml da raiz). Funciona em qualquer um dos dois layouts.
-startCommand = "cd /app/backend 2>/dev/null || cd /app ; ls -la && node scripts/start-production.js"
+startCommand = "sh -c 'if [ -d /app/backend ]; then cd /app/backend; else cd /app; fi; node scripts/prepare-and-migrate.js 2>&1 || true; exec node dist/server.js'"
 healthcheckPath = "/health"
 healthcheckTimeout = 180
 restartPolicyType = "ON_FAILURE"

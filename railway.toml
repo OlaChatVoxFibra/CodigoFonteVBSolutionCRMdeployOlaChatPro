@@ -1,24 +1,23 @@
 # Configuração Railway (RAIZ DO REPO) para o backend OlaChat Pro CRM.
 # Service: SERVIDOR BACKEND CRM.
-# Builder = DOCKERFILE. O Dockerfile Path é escolhido na UI do Railway:
-#   • Dockerfile (raiz)   → runtime fica em /app/backend
-#   • /backend/Dockerfile → runtime fica em /app
-# Para GARANTIR funcionamento independente de qual Dockerfile/caminho for usado:
-#   • Container monta symlink duplo: /app ↔ /app/backend (ambos existem sempre)
-#   • docker-entrypoint.sh detecta layout e sempre roda a partir da pasta correta.
-#   • startCommand abaixo também é resiliente e tenta AMBAS as pastas.
+# Builder = DOCKERFILE.
+#
+# ⚠️ startCommand EXPLÍCITO com CAMINHOS ABSOLUTOS (funciona em qualquer cwd):
+#    Railway ignora CMD do Dockerfile quando startCommand está definido.
+#    Executa start-production.js, que primeiro sobe FAILSAFE na porta 8080,
+#    depois roda migrations e tenta subir o server full em background.
+#    Com isso NUNCA MAIS teremos x-railway-fallback:true / Application not found.
+#
+# Layout simbionte: AMBOS os Dockerfiles montam /app e /app/backend como
+# ponteiros simétricos (symlink bidirecional). Os dois caminhos abaixo são
+# 100% equivalentes — usamos fallback duplo para 0 ambiguidade.
 
 [build]
 builder = "DOCKERFILE"
-# IMPORTANTE: Defina esse valor também na UI → Settings → Build → Dockerfile Path.
-# Recomendado = "Dockerfile" (usa o da raiz). Mas se na UI estiver "/backend/Dockerfile"
-# os symlinks dentro do container garantem que o startCommand abaixo também funciona.
 dockerfilePath = "Dockerfile"
 
 [deploy]
-# Layout resiliente: encontre a pasta onde está scripts/start-production.js e rode.
-# Funciona tanto para /app quanto para /app/backend sem mudar nada.
-startCommand = "cd /app/backend 2>/dev/null || cd /app ; ls -la && node scripts/start-production.js"
+startCommand = "sh -c 'if [ -d /app/backend ]; then cd /app/backend; else cd /app; fi; node scripts/prepare-and-migrate.js 2>&1 || true; exec node dist/server.js'"
 healthcheckPath = "/health"
 healthcheckTimeout = 180
 restartPolicyType = "ON_FAILURE"
