@@ -164,9 +164,8 @@ const UpdateUserService = async ({
     resolvedTicketVisibility = normalizeTicketVisibility(ticketVisibility);
   }
 
-  await user.update({
+  const updateData: any = {
     email,
-    password,
     profile,
     name,
     startWork,
@@ -192,7 +191,13 @@ const UpdateUserService = async ({
     finalizacaoComValorVendaAtiva,
     birthDate: processedBirthDate,
     allowSeeMessagesInPendingTickets
-  });
+  };
+
+  if (password && String(password).trim() !== "") {
+    updateData.password = password;
+  }
+
+  await user.update(updateData);
 
   await user.$set("queues", queueIds);
 
