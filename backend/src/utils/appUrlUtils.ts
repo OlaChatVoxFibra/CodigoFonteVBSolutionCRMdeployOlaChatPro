@@ -169,6 +169,7 @@ export function getCorsAllowedOrigins(): string[] {
   add("https://olachatpro.com.br");
   add("http://www.olachatpro.com.br");
   add("http://olachatpro.com.br");
+  add("https://olachatprofrontend.vercel.app");
 
   return [...set];
 }

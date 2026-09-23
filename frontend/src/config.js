@@ -19,6 +19,12 @@ export const DEFAULT_BACKEND_URL = "http://localhost:3000";
 function normalizeBackendUrl(input) {
     let url = (input || "").trim();
     if (!url) return "";
+
+    // Auto-correção de erro de digitação no domínio do Railway (olachapro -> olachatpro)
+    if (/olachapro-production\.up\.railway\.app/i.test(url)) {
+        url = url.replace(/olachapro-production\.up\.railway\.app/gi, "olachatpro-production.up.railway.app");
+    }
+
     if (/^wss?:\/\//i.test(url)) {
         url = url.replace(/^ws/i, "http");
     }
