@@ -327,15 +327,10 @@ const useAuth = () => {
           }
         };
 
-          // Verificar se o socket tem o método 'on'
-          if (socketInstance && typeof socketInstance.on === 'function') {
-            socketInstance.on(eventName, handleUserUpdate);
-            listenersRef.current.add(eventName);
-            console.log(`Listener adicionado para: ${eventName}`);
-          } else {
-            console.error("Socket instance não tem método 'on'", socketInstance);
-          }
-        }, 100);
+        if (typeof socketInstance.on === "function") {
+          socketInstance.on(eventName, handleUserUpdate);
+          listenersRef.current.add(eventName);
+        }
       }
     }
 
