@@ -13,10 +13,8 @@ builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"
 
 [deploy]
-# startCommand COMENTADO (mesma regra do railway.toml da raiz).
-# Prefira SEMPRE o CMD do Dockerfile (./scripts/docker-entrypoint.sh) que detecta layout.
-# Se precisar customizar, use exatamente essa linha abaixo:
-#   startCommand = "./scripts/docker-entrypoint.sh"
+# Layout resiliente (igual ao do railway.toml da raiz). Funciona em qualquer um dos dois layouts.
+startCommand = "cd /app/backend 2>/dev/null || cd /app ; ls -la && node scripts/start-production.js"
 healthcheckPath = "/health"
 healthcheckTimeout = 180
 restartPolicyType = "ON_FAILURE"

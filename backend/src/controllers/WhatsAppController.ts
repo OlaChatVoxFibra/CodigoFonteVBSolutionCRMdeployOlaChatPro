@@ -68,7 +68,6 @@ import axios from "axios";
 import QuickMessageComponent from "../models/QuickMessageComponent";
 import CreateService from "../services/QuickMessageService/CreateService";
 import QuickMessage from "../models/QuickMessage";
-import { cacheMetaTemplateSampleInExample } from "../services/WhatsAppOficial/buildMetaTemplatePayload";
 
 interface WhatsappData {
   name: string;
@@ -1189,17 +1188,13 @@ export const syncTemplatesOficial = async (
 
             await Promise.all(
               template.components.map(async component => {
-                const cachedExample = await cacheMetaTemplateSampleInExample(
-                  component,
-                  companyId
-                );
                 await QuickMessageComponent.create({
                   quickMessageId: quickMessage.id,
                   type: component.type,
                   text: component.text,
                   buttons: JSON.stringify(component?.buttons),
                   format: component?.format,
-                  example: JSON.stringify(cachedExample ?? component?.example)
+                  example: JSON.stringify(component?.example)
                 });
               })
             );
@@ -1226,17 +1221,13 @@ export const syncTemplatesOficial = async (
           if (Array.isArray(template.components) && template.components.length > 0) {
             await Promise.all(
               template.components.map(async component => {
-                const cachedExample = await cacheMetaTemplateSampleInExample(
-                  component,
-                  companyId
-                );
                 await QuickMessageComponent.create({
                   quickMessageId: qm.id,
                   type: component.type,
                   text: component.text,
                   buttons: JSON.stringify(component?.buttons),
                   format: component?.format,
-                  example: JSON.stringify(cachedExample ?? component?.example)
+                  example: JSON.stringify(component?.example)
                 });
               })
             );

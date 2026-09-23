@@ -5,7 +5,6 @@
  */
 
 import fs from "fs";
-import path from "path";
 import FormData from "form-data";
 import axios from "axios";
 import Whatsapp from "../../models/Whatsapp";
@@ -35,12 +34,10 @@ export const uploadMetaCloudMedia = async (
   }
 
   const form = new FormData();
-      form.append("messaging_product", "whatsapp");
+  form.append("messaging_product", "whatsapp");
   form.append("file", fs.createReadStream(filePath), {
-    filename: path.basename(filePath),
     contentType: mimeType
   });
-  form.append("type", mimeType);
 
   const url = `https://graph.facebook.com/v21.0/${phoneNumberId}/media`;
   const response = await axios.post(url, form, {

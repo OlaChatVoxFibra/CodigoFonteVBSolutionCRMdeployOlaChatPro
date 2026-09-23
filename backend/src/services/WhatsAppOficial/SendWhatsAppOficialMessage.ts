@@ -6,10 +6,6 @@
 
 import axios from "axios";
 import * as Sentry from "@sentry/node";
-import path from "path";
-import ffmpeg from "fluent-ffmpeg";
-import ffmpegStatic from "ffmpeg-static";
-import mime from "mime-types";
 import AppError from "../../errors/AppError";
 import Message from "../../models/Message";
 import Ticket from "../../models/Ticket";
@@ -29,14 +25,6 @@ import { IMetaMessageTemplate, IMetaMessageinteractive, IReturnMessageMeta, ISen
 import CreateMessageService from "../MessageServices/CreateMessageService";
 import formatBody from "../../helpers/Mustache";
 
-try {
-  if (ffmpegStatic) {
-    ffmpeg.setFfmpegPath(ffmpegStatic as string);
-  }
-} catch {
-  /* usa PATH do SO */
-}
-
 interface Request {
   body: string;
   ticket: Ticket;
@@ -50,68 +38,8 @@ interface Request {
   bodyToSave?: string
 }
 
-const DOCUMENT_MIME_PREFIXES = [
-  "application/",
-  "text/"
-];
-
-const resolveMimeType = (media?: Express.Multer.File | null): string => {
-  if (!media) return "application/octet-stream";
-  let mimeType = String(media.mimetype || "").split(";")[0].trim();
-  if (!mimeType || mimeType === "application/octet-stream") {
-    const fromName =
-      mime.lookup(media.originalname || "") ||
-      mime.lookup(media.filename || "") ||
-      mime.lookup(media.path || "");
-    if (fromName) mimeType = String(fromName);
-  }
-  if (!mimeType || mimeType === "application/octet-stream") {
-    const ext = path.extname(media.originalname || media.filename || media.path || "").toLowerCase();
-    const map: Record<string, string> = {
-      ".jpg": "image/jpeg",
-      ".jpeg": "image/jpeg",
-      ".png": "image/png",
-      ".webp": "image/webp",
-      ".gif": "image/gif",
-      ".mp4": "video/mp4",
-      ".3gp": "video/3gpp",
-      ".pdf": "application/pdf",
-      ".doc": "application/msword",
-      ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      ".xls": "application/vnd.ms-excel",
-      ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      ".ppt": "application/vnd.ms-powerpoint",
-      ".pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-      ".txt": "text/plain",
-      ".csv": "text/csv",
-      ".ogg": "audio/ogg",
-      ".opus": "audio/ogg",
-      ".mp3": "audio/mpeg",
-      ".m4a": "audio/mp4",
-      ".aac": "audio/aac",
-      ".amr": "audio/amr",
-      ".webm": "audio/webm"
-    };
-    mimeType = map[ext] || "application/octet-stream";
-  }
-  return mimeType;
-};
-
-const getTypeMessage = (
-  type: string | null,
-  mimeType?: string
-): 'text' | 'reaction' | 'audio' | 'document' | 'image' | 'sticker' | 'video' | 'location' | 'contacts' | 'interactive' | 'template' | null => {
-  if (mimeType) {
-    if (mimeType.startsWith("image/")) return "image";
-    if (mimeType.startsWith("video/")) return "video";
-    if (mimeType.startsWith("audio/")) return "audio";
-    if (
-      DOCUMENT_MIME_PREFIXES.some(p => mimeType.startsWith(p)) ||
-      mimeType === "application/octet-stream"
-    ) {
-      return "document";
-    }
-  }
+const getTypeMessage = (type: string): 'text' | 'reaction' | 'audio' | 'document' | 'image' | 'sticker' | 'video' | 'location' | 'contacts' | 'interactive' | 'template' => {
+  console.log("type", type);
   switch (type) {
     case 'video':
       return 'video';
@@ -140,32 +68,6 @@ const getTypeMessage = (
   }
 }
 
-const convertAudioToOggOpus = async (inputFile: string): Promise<string> => {
-  const parsed = path.parse(inputFile);
-  const outputFile = path.join(parsed.dir, `${parsed.name}-${Date.now()}.ogg`);
-  await new Promise<void>((resolve, reject) => {
-    ffmpeg(inputFile)
-      .audioChannels(1)
-      .audioFrequency(16000)
-      .audioCodec("libopus")
-      .audioBitrate("32k")
-      .format("ogg")
-      .on("end", () => resolve())
-      .on("error", err => reject(err))
-      .save(outputFile);
-  });
-  return outputFile;
-};
-
-const META_AUDIO_OK = new Set([
-  "audio/aac",
-  "audio/mp4",
-  "audio/mpeg",
-  "audio/amr",
-  "audio/ogg",
-  "audio/opus"
-]);
-
 const SendWhatsAppOficialMessage = async ({
   body,
   ticket,
@@ -180,52 +82,15 @@ const SendWhatsAppOficialMessage = async ({
 
   console.error(`Chegou SendWhatsAppOficialMessage - ticketId: ${ticket.id} - contactId: ${ticket.contactId}`);
 
-  let pathMedia = !!media ? media.path : null;
+  const pathMedia = !!media ? media.path : null;
   let options: ISendMessageOficial = {} as ISendMessageOficial;
-  let resolvedMime = media ? resolveMimeType(media) : null;
-  const typeMessage = resolvedMime ? resolvedMime.split("/")[0] : null;
+  const typeMessage = !!media ? media.mimetype.split("/")[0] : null;
   let bodyTicket = "";
   let mediaType: string;
-  let uploadMimeType = resolvedMime || undefined;
-  let uploadFilename = media?.originalname?.replace("/", "-") || media?.filename;
 
   const bodyMsg = body ? formatBody(body, ticket) : null;
 
-  if (!type && media) {
-    type = getTypeMessage(typeMessage, resolvedMime || undefined) as any;
-  } else if (!type) {
-    type = getTypeMessage(typeMessage) as any;
-  }
-
-  // Áudio não suportado pela Meta (ex.: webm) → converter para ogg/opus
-  if (media && pathMedia && type === "audio" && resolvedMime) {
-    const baseMime = resolvedMime.split(";")[0].trim().toLowerCase();
-    const needsConvert =
-      !META_AUDIO_OK.has(baseMime) ||
-      baseMime.includes("webm") ||
-      pathMedia.toLowerCase().endsWith(".webm");
-    if (needsConvert) {
-      try {
-        const converted = await convertAudioToOggOpus(pathMedia);
-        pathMedia = converted;
-        uploadMimeType = "audio/ogg";
-        uploadFilename = path.basename(converted);
-        if (media) {
-          media.path = converted;
-          media.mimetype = "audio/ogg";
-          media.filename = uploadFilename;
-          media.originalname = uploadFilename;
-        }
-      } catch (convErr: any) {
-        console.warn(
-          "[SendWhatsAppOficialMessage] Falha ao converter áudio para ogg:",
-          convErr?.message || convErr
-        );
-      }
-    } else if (baseMime === "audio/opus") {
-      uploadMimeType = "audio/ogg";
-    }
-  }
+  type = !type ? getTypeMessage(typeMessage) : type;
 
   if ((!media || type === "text") && type === "text") {
     const check = typeof bodyMsg === "string" ? bodyMsg.trim() : "";
@@ -234,34 +99,30 @@ const SendWhatsAppOficialMessage = async ({
     }
   }
 
-  if (media && !type) {
-    type = "document";
-  }
-
   switch (type) {
     case 'video':
       options.body_video = { caption: bodyMsg };
       options.type = 'video';
-      options.fileName = (media?.originalname || "video.mp4").replace('/', '-');
+      options.fileName = media.originalname.replace('/', '-');
       bodyTicket = "🎥 Arquivo de vídeo";
       mediaType = 'video';
       break;
     case 'audio':
       options.type = 'audio';
-      options.fileName = (media?.originalname || "audio.ogg").replace('/', '-');
+      options.fileName = media.originalname.replace('/', '-');
       bodyTicket = "🎵 Arquivo de áudio";
       mediaType = 'audio';
       break;
     case 'document':
       options.type = 'document';
       options.body_document = { caption: bodyMsg };
-      options.fileName = (media?.originalname || "document.bin").replace('/', '-');
+      options.fileName = media.originalname.replace('/', '-');
       bodyTicket = "📂 Arquivo de Documento";
       mediaType = 'document';
       break;
     case 'image':
       options.body_image = { caption: bodyMsg };
-      options.fileName = (media?.originalname || "image.jpg").replace('/', '-');
+      options.fileName = media.originalname.replace('/', '-');
       bodyTicket = "📷 Arquivo de Imagem";
       mediaType = 'image';
       break;
@@ -431,7 +292,7 @@ const SendWhatsAppOficialMessage = async ({
         const uploaded = await uploadMetaCloudMedia(
           wapp,
           pathMedia,
-          uploadMimeType || resolveMimeType(media)
+          media.mimetype
         );
         const messageId = await sendMetaCloudMessageDirect({
           whatsapp: wapp,
@@ -439,7 +300,7 @@ const SendWhatsAppOficialMessage = async ({
           type: type as "image" | "video" | "audio" | "document",
           mediaId: uploaded.id,
           mediaCaption: bodyMsg || undefined,
-          mediaFilename: (uploadFilename || media.originalname || "file").replace("/", "-")
+          mediaFilename: media.originalname?.replace("/", "-")
         });
         sendMessage = { idMessageWhatsApp: [messageId] };
       } else {

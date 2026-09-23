@@ -64,20 +64,13 @@ export default function LeadChatPane({
                 contact={ticket?.contact}
                 onQuickMessageSelect={(quickMessage) => {
                   try {
-                    window.dispatchEvent(
-                      new CustomEvent("insertQuickMessage", {
-                        detail: {
-                          quickMessage: {
-                            id: quickMessage?.id,
-                            message: quickMessage?.message || "",
-                            shortcode: quickMessage?.shortcode || "",
-                            mediaPath: quickMessage?.mediaPath || null,
-                            mediaType: quickMessage?.mediaType || null,
-                            value: quickMessage?.message || ""
-                          }
-                        }
-                      })
-                    );
+                    if (quickMessage?.message) {
+                      window.dispatchEvent(
+                        new CustomEvent("insertQuickMessage", {
+                          detail: { message: quickMessage.message }
+                        })
+                      );
+                    }
                   } catch (e) {
                     /* ignore */
                   }
