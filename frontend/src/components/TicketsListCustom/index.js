@@ -367,29 +367,21 @@ const TicketsListCustom = React.memo((props) => {
             if (status === "pending") {
                 return true;
             }
-            if (status === "open" && sameUser) {
-                return true;
+            if (status === "open") {
+                if (sameUser || !ticket?.userId || showAll || currentUser?.profile === "admin" || currentUser?.allUserChat === "enabled") {
+                    return true;
+                }
+                if (ticket?.isBot === true || ticket?.useIntegration === true || String(ticket?.channel || "").toLowerCase() === "whatsapp_oficial") {
+                    return true;
+                }
             }
             if (status === "closed" && ticket?.status === "closed") {
                 return true;
             }
-            if (status === "open" && (ticket?.isBot === true || ticket?.useIntegration === true)) {
-                return true;
-            }
-            // API Oficial Meta: mantém na lista enquanto estiver open (mesmo sem fila / com IA).
-            if (
-                status === "open" &&
-                String(ticket?.channel || "").toLowerCase() === "whatsapp_oficial" &&
-                ticket?.status === "open"
-            ) {
-                return sameUser || !ticket?.userId || showAll;
-            }
             const noQueueFilter = !selectedQueueIds || selectedQueueIds.length === 0;
             return (!ticket?.userId || sameUser || showAll) &&
-                ((!ticket?.queueId && showTicketWithoutQueue) || noQueueFilter || selectedQueueIds.indexOf(ticket?.queueId) > -1)
-        }
-        // const shouldUpdateTicketUser = (ticket) =>
-        //     selectedQueueIds.indexOf(ticket?.queueId) > -1 && (ticket?.userId === user?.id || !ticket?.userId);
+                ((!ticket?.queueId && showTicketWithoutQueue) || noQueueFilter || selectedQueueIds.indexOf(ticket?.queueId) > -1);
+        };
 
         const notBelongsToUserQueues = (ticket) =>
             ticket.queueId && selectedQueueIds.indexOf(ticket.queueId) === -1;
@@ -410,7 +402,6 @@ const TicketsListCustom = React.memo((props) => {
             );
 
         const onCompanyTicketTicketsList = (data) => {
-            // console.log("onCompanyTicketTicketsList", data)
             if (data.action === "updateUnread") {
                 dispatch({
                     type: "RESET_UNREAD",
@@ -419,7 +410,6 @@ const TicketsListCustom = React.memo((props) => {
                     sortDir: sortTickets
                 });
             }
-            // console.log(shouldUpdateTicket(data.ticket))
             if (data.action === "update") {
                 if (ticketStatusMatchesTab(data.ticket.status, status) && shouldUpdateTicket(data.ticket)) {
                     dispatch({
@@ -428,7 +418,15 @@ const TicketsListCustom = React.memo((props) => {
                         status: status,
                         sortDir: sortTickets
                     });
-                } else if (!(isMyOpenTicket(data.ticket) || keepOficialOpenTicket(data.ticket))) {
+                } else if (status === "open" && data.ticket.status === "open") {
+                    // Mantém na aba Atendendo enquanto o status continuar open
+                    dispatch({
+                        type: "UPDATE_TICKET",
+                        payload: data.ticket,
+                        status: status,
+                        sortDir: sortTickets
+                    });
+                } else if (data.ticket.status !== status) {
                     dispatch({
                         type: "DELETE_TICKET",
                         payload: data.ticket?.id,
@@ -447,21 +445,12 @@ const TicketsListCustom = React.memo((props) => {
                 });
             }
 
-            // else if (data.action === "update" && shouldUpdateTicketUser(data.ticket) && data.ticket.status === status) {
-            //     dispatch({
-            //         type: "UPDATE_TICKET",
-            //         payload: data.ticket,
-            //     });
-            // }
-            // Aguardando: API já lista todos os pendentes; não remover só porque a fila selecionada na UI não bate
-            // (senão sumiam tickets SEM FILA / IA em tempo real mesmo existindo no backend).
             if (
                 data.action === "update" &&
                 status !== "pending" &&
+                status !== "open" &&
                 notBelongsToUserQueues(data.ticket) &&
                 !isMyOpenTicket(data.ticket) &&
-                !(status === "open" && (data.ticket?.isBot === true || data.ticket?.useIntegration === true)) &&
-                !keepOficialOpenTicket(data.ticket) &&
                 !(status === "closed" && data.ticket?.status === "closed" && shouldUpdateTicket(data.ticket))
             ) {
                 dispatch({

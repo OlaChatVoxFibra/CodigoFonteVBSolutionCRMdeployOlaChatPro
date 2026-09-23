@@ -173,19 +173,6 @@ const ListTicketsService = async ({
   const userQueueIds = user.queues.map(queue => queue.id);
 
   if (status === "open") {
-    /**
-     * Fila na UI (queueIds) não pode esconder tickets já atribuídos a mim — senão some após F5
-     * se o ticket estiver numa fila fora do filtro ou herdada do canal.
-     * Filtro de fila aplica só a: sem atendente, bot ou integração.
-     */
-    const effectiveOpenQueueIds = queueIds.length > 0 ? queueIds : userQueueIds;
-    const openSharedQueueId =
-      effectiveOpenQueueIds.length > 0
-        ? showTicketWithoutQueue
-          ? { [Op.or]: [effectiveOpenQueueIds, null] }
-          : { [Op.or]: [effectiveOpenQueueIds] }
-        : { [Op.or]: [null] };
-
     /** Tickets do Agente IA / integração / API Oficial Meta devem persistir após F5. */
     const openBotOrIntegrationClause = [
       { [Op.and]: [{ isBot: true }, { userId: null }] },
@@ -198,33 +185,35 @@ const ListTicketsService = async ({
       }
     ];
 
+    const isFilteredBySpecificQueue = queueIds && queueIds.length > 0;
+
     if (canSeeOtherUsers || showAll === "true") {
-      const adminQueueFilter =
-        showTicketAllQueues && queueIds.length === 0
-          ? undefined
-          : openSharedQueueId;
       whereCondition = {
         companyId: !user.super ? companyId : { [Op.or]: [companyId, { [Op.ne]: null }] },
         status: "open",
-        // Sempre incluir tickets atribuídos a mim — filtro de fila não pode esconder após F5
-        // (API Oficial / filas herdadas fora do seletor da UI).
-        ...(adminQueueFilter
+        ...(isFilteredBySpecificQueue
           ? {
               [Op.or]: [
                 { userId },
-                { queueId: adminQueueFilter },
+                { queueId: { [Op.or]: [queueIds, null] } },
                 ...openBotOrIntegrationClause
               ]
             }
           : {})
       };
     } else {
+      const effectiveOpenQueueIds = isFilteredBySpecificQueue ? queueIds : userQueueIds;
+      const openSharedQueueId =
+        effectiveOpenQueueIds.length > 0
+          ? { [Op.or]: [effectiveOpenQueueIds, null] }
+          : { [Op.or]: [null] };
+
       whereCondition = {
         companyId: !user.super ? companyId : { [Op.or]: [companyId, { [Op.ne]: null }] },
         status: "open",
         [Op.or]: [
           { userId },
-          { [Op.and]: [{ userId: null }, { queueId: openSharedQueueId }] },
+          { [Op.and]: [{ queueId: openSharedQueueId }] },
           ...openBotOrIntegrationClause
         ]
       };
