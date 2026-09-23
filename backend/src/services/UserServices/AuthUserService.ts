@@ -87,7 +87,11 @@ const AuthUserService = async ({
   const uniqueCandidates = [...new Set(adminCandidates.filter(Boolean))];
 
   const user = await User.findOne({
-    where: { email: { [Op.iLike]: { [Op.any]: uniqueCandidates } } },
+    where: {
+      [Op.or]: uniqueCandidates.map((c) => ({
+        email: { [Op.iLike]: c }
+      }))
+    },
     include: [
       "queues",
       {

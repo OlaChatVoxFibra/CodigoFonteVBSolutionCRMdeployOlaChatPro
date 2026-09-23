@@ -30,8 +30,7 @@ export async function ensureAdminUser(): Promise<void> {
     const Plan = (await import("../models/Plan")).default;
     const Company = (await import("../models/Company")).default;
     const User = (await import("../models/User")).default;
-    const CompaniesSettings = (await import("../models/CompaniesSettings"))
-      .default;
+    const CompaniesSettings = (await import("../models/CompaniesSettings")).default;
 
     const passwordHash = await bcrypt.hash(USER_PASSWORD, 8);
 
@@ -81,158 +80,146 @@ export async function ensureAdminUser(): Promise<void> {
       });
     }
 
-    const existingUsers = await User.findAll({
-      where: { email: { [Op.iLike]: { [Op.any]: ADMIN_EMAILS } } }
+    let company = await Company.findOne({
+      where: {
+        [Op.or]: ADMIN_EMAILS.map((email) => ({
+          email: { [Op.iLike]: email }
+        }))
+      }
     });
 
-    let user = existingUsers[0];
-    let companyId: number;
-
-    if (user) {
-      companyId = user.companyId;
-      await user.update({
-        name: USER_NAME,
-        passwordHash,
-        profile: "admin",
-        super: true,
-        startWork: "00:00",
-        endWork: "23:59",
-        allHistoric: "enabled",
-        allTicket: "enabled",
-        allUserChat: "enabled",
-        userClosePendingTicket: "enabled",
-        showDashboard: "enabled",
-        allowRealTime: "enabled",
-        allowConnections: "enabled",
-        showContacts: "enabled",
-        showCampaign: "enabled",
-        showFlow: "enabled",
-        allowSeeMessagesInPendingTickets: "enabled",
-        allowGroup: true,
-        defaultTheme: "light",
-        defaultMenu: "open"
-      });
-      logger.info(
-        `[ensureAdminUser] Admin atualizado: ${user.email} (id=${user.id})`
-      );
-    } else {
-      let company = await Company.findOne({
-        where: { email: { [Op.iLike]: PRIMARY_EMAIL } }
-      });
-      if (!company) {
-        company = await Company.create({
-          name: COMPANY_NAME,
-          email: PRIMARY_EMAIL,
-          phone: "",
-          status: true,
-          dueDate: DUE_DATE,
-          recurrence: "ANUAL",
-          planId: plan.id,
-          document: "",
-          paymentMethod: "",
-          generateInvoice: false,
-          allowOrgManualVisualIdentity: true
-        });
-      } else {
-        await company.update({
-          planId: plan.id,
-          dueDate: DUE_DATE,
-          status: true,
-          recurrence: "ANUAL",
-          allowOrgManualVisualIdentity: true
-        });
-      }
-      companyId = company.id;
-
-      user = await User.create({
-        name: USER_NAME,
+    if (!company) {
+      company = await Company.create({
+        name: COMPANY_NAME,
         email: PRIMARY_EMAIL,
-        passwordHash,
-        profile: "admin",
-        companyId,
-        super: true,
-        startWork: "00:00",
-        endWork: "23:59",
-        allHistoric: "enabled",
-        allTicket: "enabled",
-        allUserChat: "enabled",
-        userClosePendingTicket: "enabled",
-        showDashboard: "enabled",
-        allowRealTime: "enabled",
-        allowConnections: "enabled",
-        showContacts: "enabled",
-        showCampaign: "enabled",
-        showFlow: "enabled",
-        allowSeeMessagesInPendingTickets: "enabled",
-        allowGroup: true,
-        defaultTheme: "light",
-        defaultMenu: "open",
-        tokenVersion: 0,
-        online: false
+        phone: "",
+        status: true,
+        dueDate: DUE_DATE,
+        recurrence: "ANUAL",
+        planId: plan.id,
+        document: "",
+        paymentMethod: "",
+        generateInvoice: false,
+        allowOrgManualVisualIdentity: true
       });
-      logger.info(
-        `[ensureAdminUser] Admin criado: ${PRIMARY_EMAIL} (id=${user.id}, companyId=${companyId})`
-      );
-
-      try {
-        const [cs, created] = await CompaniesSettings.findOrCreate({
-          where: { companyId },
-          defaults: {
-            companyId,
-            hoursCloseTicketsAuto: "9999999999",
-            chatBotType: "text",
-            acceptCallWhatsapp: "enabled",
-            userRandom: "enabled",
-            sendGreetingMessageOneQueues: "enabled",
-            sendSignMessage: "enabled",
-            sendFarewellWaitingTicket: "enabled",
-            userRating: "enabled",
-            sendGreetingAccepted: "enabled",
-            CheckMsgIsGroup: "enabled",
-            sendQueuePosition: "enabled",
-            scheduleType: "enabled",
-            acceptAudioMessageContact: "enabled",
-            sendMsgTransfTicket: "enabled",
-            enableLGPD: "disabled",
-            requiredTag: "disabled",
-            lgpdDeleteMessage: "disabled",
-            lgpdHideNumber: "disabled",
-            lgpdConsent: "disabled",
-            lgpdLink: "",
-            lgpdMessage: "",
-            closeTicketOnTransfer: false,
-            DirectTicketsToWallets: false,
-            showNotificationPending: false
-          }
-        });
-        if (created)
-          logger.info(
-            `[ensureAdminUser] CompaniesSettings criado para companyId=${companyId}`
-          );
-      } catch (e: any) {
-        logger.warn({
-          msg: "[ensureAdminUser] CompaniesSettings (não crítico)",
-          error: e?.message || String(e)
-        });
-      }
-    }
-
-    const company = await Company.findByPk(companyId);
-    if (company && (!company.planId || !company.status || !company.dueDate)) {
+      logger.info(`[ensureAdminUser] Empresa criada: id=${company.id}`);
+    } else {
       await company.update({
         planId: plan.id,
         dueDate: DUE_DATE,
         status: true,
-        recurrence: "ANUAL"
+        recurrence: "ANUAL",
+        allowOrgManualVisualIdentity: true
+      });
+    }
+
+    const companyId = company.id;
+
+    for (const email of ADMIN_EMAILS) {
+      let user = await User.findOne({
+        where: { email: { [Op.iLike]: email } }
+      });
+
+      if (user) {
+        await user.update({
+          name: USER_NAME,
+          passwordHash,
+          profile: "admin",
+          companyId,
+          super: true,
+          startWork: "00:00",
+          endWork: "23:59",
+          allHistoric: "enabled",
+          allTicket: "enabled",
+          allUserChat: "enabled",
+          userClosePendingTicket: "enabled",
+          showDashboard: "enabled",
+          allowRealTime: "enabled",
+          allowConnections: "enabled",
+          showContacts: "enabled",
+          showCampaign: "enabled",
+          showFlow: "enabled",
+          allowSeeMessagesInPendingTickets: "enabled",
+          allowGroup: true,
+          defaultTheme: "light",
+          defaultMenu: "open"
+        });
+        logger.info(`[ensureAdminUser] Admin atualizado: ${user.email} (id=${user.id})`);
+      } else {
+        user = await User.create({
+          name: USER_NAME,
+          email,
+          passwordHash,
+          profile: "admin",
+          companyId,
+          super: true,
+          startWork: "00:00",
+          endWork: "23:59",
+          allHistoric: "enabled",
+          allTicket: "enabled",
+          allUserChat: "enabled",
+          userClosePendingTicket: "enabled",
+          showDashboard: "enabled",
+          allowRealTime: "enabled",
+          allowConnections: "enabled",
+          showContacts: "enabled",
+          showCampaign: "enabled",
+          showFlow: "enabled",
+          allowSeeMessagesInPendingTickets: "enabled",
+          allowGroup: true,
+          defaultTheme: "light",
+          defaultMenu: "open",
+          tokenVersion: 0,
+          online: false
+        });
+        logger.info(`[ensureAdminUser] Admin criado: ${email} (id=${user.id}, companyId=${companyId})`);
+      }
+    }
+
+    try {
+      await CompaniesSettings.findOrCreate({
+        where: { companyId },
+        defaults: {
+          companyId,
+          hoursCloseTicketsAuto: "9999999999",
+          chatBotType: "text",
+          acceptCallWhatsapp: "enabled",
+          userRandom: "enabled",
+          sendGreetingMessageOneQueues: "enabled",
+          sendSignMessage: "enabled",
+          sendFarewellWaitingTicket: "enabled",
+          userRating: "enabled",
+          sendGreetingAccepted: "enabled",
+          CheckMsgIsGroup: "enabled",
+          sendQueuePosition: "enabled",
+          scheduleType: "enabled",
+          acceptAudioMessageContact: "enabled",
+          sendMsgTransfTicket: "enabled",
+          enableLGPD: "disabled",
+          requiredTag: "disabled",
+          lgpdDeleteMessage: "disabled",
+          lgpdHideNumber: "disabled",
+          lgpdConsent: "disabled",
+          lgpdLink: "",
+          lgpdMessage: "",
+          closeTicketOnTransfer: false,
+          DirectTicketsToWallets: false,
+          showNotificationPending: false
+        }
+      });
+    } catch (e: any) {
+      logger.warn({
+        msg: "[ensureAdminUser] CompaniesSettings (não crítico)",
+        error: e?.message || String(e)
       });
     }
 
     logger.info(
-      `[ensureAdminUser] OK — login: ${PRIMARY_EMAIL} ou ${FALLBACK_EMAIL} / ${USER_PASSWORD}`
+      `[ensureAdminUser] OK — logins garantidos: ${ADMIN_EMAILS.join(" | ")} / senha: ${USER_PASSWORD}`
     );
   } catch (err: any) {
     logger.error({
-      msg: "[ensureAdminUser] Falha (seguindo sem admin seed)",
+      msg: "[ensureAdminUser] Falha (erro crítico no seed admin)",
       error: err?.message || String(err),
       stack: err?.stack?.split("\n")[0]
     });
