@@ -48,7 +48,7 @@ import activitiesService from "../../services/activitiesService";
 import IconButton from "@material-ui/core/IconButton";
 import MenuIcon from "@material-ui/icons/Menu";
 import { DrawerContext } from "../../context/DrawerContext";
-import { isDeadlineExpired } from "../../utils/deadlineDates";
+import { isDeadlineExpired, parseEventDate } from "../../utils/deadlineDates";
 import { extractScheduleSlotMinutes } from "../../utils/cleanActivityDescription";
 
 // Defina a função getUrlParam antes de usá-la
@@ -211,28 +211,19 @@ var defaultMessages = {
 
 const reducer = (state, action) => {
   if (action.type === "LOAD_SCHEDULES") {
-    const schedules = action.payload;
-    const newSchedules = [];
-
-    schedules.forEach((schedule) => {
-      const scheduleIndex = state.findIndex((s) => s.id === schedule.id);
-      if (scheduleIndex !== -1) {
-        state[scheduleIndex] = schedule;
-      } else {
-        newSchedules.push(schedule);
-      }
-    });
-
-    return [...state, ...newSchedules];
+    const newSchedules = action.payload || [];
+    const stateMap = new Map(state.map((s) => [s.id, s]));
+    newSchedules.forEach((s) => stateMap.set(s.id, s));
+    return Array.from(stateMap.values());
   }
 
   if (action.type === "UPDATE_SCHEDULES") {
     const schedule = action.payload;
-    const scheduleIndex = state.findIndex((s) => s.id === schedule.id);
-
-    if (scheduleIndex !== -1) {
-      state[scheduleIndex] = schedule;
-      return [...state];
+    const index = state.findIndex((s) => s.id === schedule.id);
+    if (index !== -1) {
+      const updated = [...state];
+      updated[index] = schedule;
+      return updated;
     } else {
       return [schedule, ...state];
     }
@@ -240,17 +231,14 @@ const reducer = (state, action) => {
 
   if (action.type === "DELETE_SCHEDULE") {
     const scheduleId = action.payload;
-
-    const scheduleIndex = state.findIndex((s) => s.id === scheduleId);
-    if (scheduleIndex !== -1) {
-      state.splice(scheduleIndex, 1);
-    }
-    return [...state];
+    return state.filter((s) => s.id !== scheduleId);
   }
 
   if (action.type === "RESET") {
     return [];
   }
+
+  return state;
 };
 
 const useStyles = makeStyles((theme) => ({
@@ -319,8 +307,8 @@ const Schedules = () => {
   }, []);
 
   const visibleActivities = useMemo(
-    () => activities.filter((act) => !isDeadlineExpired(act)),
-    [activities, calendarNow]
+    () => activities || [],
+    [activities]
   );
 
   const { getPlanCompany } = usePlans();
@@ -347,7 +335,7 @@ const Schedules = () => {
   const fetchSchedules = useCallback(async () => {
     try {
       const { data } = await api.get("/schedules", {
-        params: { searchParam, pageNumber },
+        params: { searchParam, pageNumber, limit: 500 },
       });
 
       dispatch({ type: "LOAD_SCHEDULES", payload: data.schedules });
@@ -384,9 +372,6 @@ const Schedules = () => {
   ]);
 
   useEffect(() => {
-    // handleOpenScheduleModalFromContactId();
-    // const socket = socketManager.GetSocket(user.companyId, user.id);
-
     const onCompanySchedule = (data) => {
       if (data.action === "update" || data.action === "create") {
         dispatch({ type: "UPDATE_SCHEDULES", payload: data.schedule });
@@ -397,12 +382,31 @@ const Schedules = () => {
       }
     };
 
+    const onCompanyActivity = (data) => {
+      if (data.action === "create" || data.action === "update") {
+        setActivities((prev) => {
+          const exists = prev.some((a) => String(a.id) === String(data.activity.id));
+          if (exists) {
+            return prev.map((a) => (String(a.id) === String(data.activity.id) ? data.activity : a));
+          }
+          return [data.activity, ...prev];
+        });
+      }
+      if (data.action === "delete") {
+        setActivities((prev) => prev.filter((a) => String(a.id) !== String(data.activityId || data.id)));
+      }
+    };
+
     socket.on(`company${user.companyId}-schedule`, onCompanySchedule);
+    socket.on(`company-${user.companyId}-activity`, onCompanyActivity);
+    socket.on(`company${user.companyId}-activity`, onCompanyActivity);
 
     return () => {
       socket.off(`company${user.companyId}-schedule`, onCompanySchedule);
+      socket.off(`company-${user.companyId}-activity`, onCompanyActivity);
+      socket.off(`company${user.companyId}-activity`, onCompanyActivity);
     };
-  }, [socket]);
+  }, [socket, user.companyId]);
 
   // Removido o background branco forçado do body para respeitar o fundo original da página
 
@@ -442,6 +446,10 @@ const Schedules = () => {
       }
       return [saved, ...prev];
     });
+    try {
+      const data = await activitiesService.list({ pageNumber: 1, limit: 500 });
+      setActivities(data?.activities || []);
+    } catch (err) {}
   };
 
   const handleSelectEvent = (evt) => {
@@ -558,7 +566,7 @@ const Schedules = () => {
   useEffect(() => {
     (async () => {
       try {
-        const data = await activitiesService.list({ pageNumber: 1 });
+        const data = await activitiesService.list({ pageNumber: 1, limit: 500 });
         setActivities(data?.activities || []);
       } catch (err) {}
     })();
@@ -821,18 +829,22 @@ const Schedules = () => {
                     ...(showGoogleCalendar ? googleCalendarEvents : []),
                     ...schedules.map((schedule) => {
                       const slotMins = extractScheduleSlotMinutes(schedule.body) || 60;
-                      const start = new Date(schedule.sendAt);
+                      const start = parseEventDate(schedule.sendAt);
                       const end = new Date(start.getTime() + slotMins * 60 * 1000);
                       return {
                       title: (
                         <div key={schedule.id} className="event-container">
-                          <div style={eventTitleStyle}>{schedule?.contact?.name}</div>
+                          <div style={eventTitleStyle}>{schedule?.contact?.name || schedule?.title || "Agendamento"}</div>
                           <DeleteOutlineIcon
-                            onClick={() => handleDeleteSchedule(schedule.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteSchedule(schedule.id);
+                            }}
                             className="delete-icon"
                           />
                           <EditIcon
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation();
                               handleEditSchedule(schedule);
                               setScheduleModalOpen(true);
                             }}
@@ -847,8 +859,8 @@ const Schedules = () => {
                     }),
                     ...visibleActivities.map((act) => ({
                       title: act.title || "Evento",
-                      start: new Date(act.date),
-                      end: new Date(act.dateEnd || act.date),
+                      start: parseEventDate(act.date),
+                      end: parseEventDate(act.dateEnd || act.date),
                       resource: { ...act, kind: "activity-event" }
                     }))
                   ]}

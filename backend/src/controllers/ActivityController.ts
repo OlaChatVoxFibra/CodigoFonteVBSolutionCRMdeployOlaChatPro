@@ -18,11 +18,12 @@ interface IndexQuery {
   status?: string;
   dateStart?: string;
   dateEnd?: string;
+  limit?: string;
 }
 
 export const index = async (req: Request, res: Response): Promise<Response> => {
   const { companyId } = req.user;
-  const { searchParam, pageNumber, status, dateStart, dateEnd } =
+  const { searchParam, pageNumber, status, dateStart, dateEnd, limit } =
     req.query as IndexQuery;
 
   const { activities, count, hasMore } = await ListService({
@@ -31,7 +32,8 @@ export const index = async (req: Request, res: Response): Promise<Response> => {
     status,
     dateStart,
     dateEnd,
-    companyId
+    companyId,
+    limit
   });
 
   return res.json({ activities, count, hasMore });

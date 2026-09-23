@@ -166,3 +166,37 @@ export const isDeadlineExpired = (item) => {
   const end = new Date(endRaw);
   return !Number.isNaN(end.getTime()) && end.getTime() < Date.now();
 };
+
+/** Converte string/Date para Date local seguro sem deslocamento de dia no calendário. */
+export const parseEventDate = (dateVal) => {
+  if (!dateVal) return new Date();
+  if (dateVal instanceof Date) return dateVal;
+
+  const str = String(dateVal).trim();
+
+  // Caso 1: YYYY-MM-DD puro -> 09:00 no fuso local do dia
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+    const [y, m, d] = str.split("-").map(Number);
+    return new Date(y, m - 1, d, 9, 0, 0);
+  }
+
+  // Caso 2: YYYY-MM-DD HH:mm ou YYYY-MM-DD THH:mm:ss sem indicador de fuso explicitado (ex: sem Z, sem +00:00)
+  if (/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}/.test(str) && !str.includes("Z") && !str.includes("+") && !str.includes("-0") && !str.includes("-3")) {
+    const parts = str.split(/[ T:]/);
+    const y = Number(parts[0]);
+    const m = Number(parts[1]);
+    const d = Number(parts[2]);
+    const hh = Number(parts[3]) || 0;
+    const mm = Number(parts[4]) || 0;
+    const ss = Number(parts[5]) || 0;
+    return new Date(y, m - 1, d, hh, mm, ss);
+  }
+
+  const parsed = new Date(str);
+  if (!Number.isNaN(parsed.getTime())) {
+    return parsed;
+  }
+
+  return new Date();
+};
+

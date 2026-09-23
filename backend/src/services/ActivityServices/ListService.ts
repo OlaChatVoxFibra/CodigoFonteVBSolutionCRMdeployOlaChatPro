@@ -25,6 +25,7 @@ interface Request {
   dateStart?: string;
   dateEnd?: string;
   companyId: number;
+  limit?: string | number;
 }
 
 interface Response {
@@ -39,7 +40,8 @@ const ListService = async ({
   status,
   dateStart,
   dateEnd,
-  companyId
+  companyId,
+  limit: limitParam
 }: Request): Promise<Response> => {
   const where: any = {
     companyId
@@ -79,7 +81,7 @@ const ListService = async ({
     where.date = range;
   }
 
-  const limit = 20;
+  const limit = Number(limitParam) || 20;
   const page = Number(pageNumber) || 1;
   const offset = limit * (page - 1);
 

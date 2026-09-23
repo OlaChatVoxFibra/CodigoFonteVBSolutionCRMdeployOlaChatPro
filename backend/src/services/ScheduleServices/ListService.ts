@@ -16,6 +16,7 @@ interface Request {
   userId?: number | string;
   companyId?: number;
   pageNumber?: string | number;
+  limit?: string | number;
 }
 
 interface Response {
@@ -29,10 +30,11 @@ const ListService = async ({
   contactId = "",
   userId = "",
   pageNumber = "1",
-  companyId
+  companyId,
+  limit: limitParam
 }: Request): Promise<Response> => {
   let whereCondition = {};
-  const limit = 20;
+  const limit = Number(limitParam) || 20;
   const offset = limit * (+pageNumber - 1);
 
   if (searchParam) {
