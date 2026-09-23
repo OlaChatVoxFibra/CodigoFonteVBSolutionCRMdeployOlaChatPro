@@ -19,6 +19,7 @@ import { i18n } from "../../translate/i18n";
 import { AuthContext } from "../../context/Auth/AuthContext";
 import logo from "../../assets/olachat-logo-light.png";
 import logoDark from "../../assets/olachat-logo-dark.png";
+import logoTicketsLight from "../../assets/olachat-logo-tickets-modo claro.png";
 import { getBackendUrl } from "../../config";
 
 const defaultTicketsManagerWidth = 580;
@@ -127,7 +128,7 @@ const TicketsCustom = () => {
 	const theme = useTheme();
 	const isLight = (theme.palette && theme.palette.type === "light") || theme.mode === "light";
 	const welcomeLogoSrc = isLight
-		? (typeof theme.calculatedLogoLight === "function" ? theme.calculatedLogoLight() : (theme.appLogoLight || logo))
+		? logoTicketsLight
 		: (theme.appLogoTickets && String(theme.appLogoTickets).trim() !== ""
 			? theme.appLogoTickets
 			: (typeof theme.calculatedLogoDark === "function" ? theme.calculatedLogoDark() : (theme.appLogoDark || logoDark)));

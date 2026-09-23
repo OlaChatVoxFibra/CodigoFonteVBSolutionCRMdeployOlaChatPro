@@ -642,7 +642,7 @@ const Dashboard = () => {
   const [addDueProjects, setAddDueProjects] = useState(false);
   const [schedulesToday, setSchedulesToday] = useState([]);
 
-  const { user } = useContext(AuthContext);
+  const { user, socket } = useContext(AuthContext);
   const { activities, loading: loadingActivities } = useActivities({
     searchParam: "",
     pageNumber: 1,
@@ -871,7 +871,16 @@ const Dashboard = () => {
 
   useEffect(() => {
     loadTodaySchedules();
-  }, []);
+    if (socket && user?.companyId) {
+      const onScheduleChange = () => {
+        loadTodaySchedules();
+      };
+      socket.on(`company${user.companyId}-schedule`, onScheduleChange);
+      return () => {
+        socket.off(`company${user.companyId}-schedule`, onScheduleChange);
+      };
+    }
+  }, [socket, user?.companyId]);
 
   // Ícones distintos por bloco (cabeçalho)
   const renderHeaderIconById = (blockId) => {

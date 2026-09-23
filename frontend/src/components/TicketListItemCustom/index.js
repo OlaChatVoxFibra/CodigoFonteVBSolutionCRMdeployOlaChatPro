@@ -628,11 +628,7 @@ const TicketListItemCustom = ({ setTabOpen, ticket, compact = false }) => {
       handleSelectTicket(ticket);
       history.push(`/tickets/${ticket.uuid}`);
     } else {
-      // Comportamento original
-      const setting = await getSetting({
-        column: "requiredTag",
-      });
-
+      setLoading(true);
       const closePayload = {
         status: "closed",
         userId: user?.id || null,
@@ -640,47 +636,19 @@ const TicketListItemCustom = ({ setTabOpen, ticket, compact = false }) => {
         amountUsedBotQueues: 0,
       };
 
-      if (setting.requiredTag === "enabled") {
-        //verificar se tem uma tag
-        try {
-          const contactTags = await api.get(
-            `/contactTags/${ticket.contact.id}`
-          );
-          if (!contactTags.data.tags) {
-            toast.warning(i18n.t("messagesList.header.buttons.requiredTag"));
-          } else {
-            const { data } = await api.put(`/tickets/${id}`, closePayload);
-
-            if (isMounted.current) {
-              setLoading(false);
-            }
-
-            if (data?.status === "closed") {
-              setTabOpen("closed");
-            }
-            setCurrentTicket({ id: null, code: null });
-            history.push(`/tickets/`);
-          }
-        } catch (err) {
-          setLoading(false);
-          toastError(err);
+      try {
+        const { data } = await api.put(`/tickets/${id}`, closePayload);
+        if (data?.status === "closed") {
+          setTabOpen("closed");
+          toast.success("Atendimento finalizado com sucesso!");
         }
-      } else {
-        setLoading(true);
-        try {
-          const { data } = await api.put(`/tickets/${id}`, closePayload);
-          if (data?.status === "closed") {
-            setTabOpen("closed");
-          }
-          setCurrentTicket({ id: null, code: null });
-        } catch (err) {
-          toastError(err);
-        }
-        if (isMounted.current) {
-          setLoading(false);
-        }
-
+        setCurrentTicket({ id: null, code: null });
         history.push(`/tickets/`);
+      } catch (err) {
+        toastError(err);
+      }
+      if (isMounted.current) {
+        setLoading(false);
       }
     }
   };

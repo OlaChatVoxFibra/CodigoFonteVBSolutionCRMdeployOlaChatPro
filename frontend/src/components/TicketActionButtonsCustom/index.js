@@ -418,27 +418,7 @@ const TicketActionButtonsCustom = ({
   }, []);
 
   const handleClickOpen = async (e) => {
-    const setting = await getSetting({
-      column: "requiredTag",
-    });
-
-    if (setting?.requiredTag === "enabled") {
-      //verificar se tem uma tag
-      try {
-        const contactTags = await api.get(`/contactTags/${ticket.contact.id}`);
-        if (!contactTags.data.tags) {
-          toast.warning(i18n.t("messagesList.header.buttons.requiredTag"));
-        } else {
-          setOpen(true);
-          // handleUpdateTicketStatus(e, "closed", user?.id);
-        }
-      } catch (err) {
-        toastError(err);
-      }
-    } else {
-      setOpen(true);
-      // handleUpdateTicketStatus(e, "closed", user?.id);
-    }
+    setOpen(true);
   };
 
   const handleClose = () => {
@@ -488,6 +468,7 @@ const TicketActionButtonsCustom = ({
       setLoading(false);
       if (data?.status === "closed") {
         setTabOpen("closed");
+        toast.success("Atendimento finalizado com sucesso!");
       }
       setCurrentTicket({ id: null, code: null });
       history.push("/tickets");
@@ -663,6 +644,7 @@ const TicketActionButtonsCustom = ({
         setCurrentTicket({ id: null, code: null });
         if (data?.status === "closed") {
           setTabOpen("closed");
+          toast.success("Atendimento finalizado com sucesso!");
         }
         history.push("/tickets");
       }

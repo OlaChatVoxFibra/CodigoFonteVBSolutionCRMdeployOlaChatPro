@@ -59,8 +59,8 @@ const useStyles = makeStyles((theme) => ({
     display: "flex",
     flexDirection: "column",
     overflow: "hidden",
-    backgroundColor: theme.palette.type === 'dark' ? theme.palette.background.paper : undefined,
-    color: theme.palette.text.primary,
+    backgroundColor: theme.palette.type === 'dark' ? '#252526' : '#ffffff',
+    color: theme.palette.type === 'dark' ? '#ffffff' : '#0f172a',
   },
   header: {
     display: "flex",

@@ -85,13 +85,13 @@ const DARK_BG_ELEVATED = "#454545";
 /** Cards de KPI / quadros no escuro: cinza escuro nítido */
 const DARK_DASHBOARD_CARD = "#48484b";
 /** OlaChat Pro — cores padrão da marca */
-const BRAND_PRIMARY = "#128C5A";
-const BRAND_NAVBAR = "#1E3A8A";
-const BRAND_SIDEBAR = "#0F2760";
+const BRAND_PRIMARY = "#1e40af";
+const BRAND_NAVBAR = "#172554";
+const BRAND_SIDEBAR = "#172554";
 const BRAND_TEXT_PRIMARY = "#FFFFFF";
 const BRAND_TEXT_SECONDARY = "#E5E7EB";
 /** Topbar padrão (claro e escuro) */
-const DARK_TOPBAR_DEFAULT = BRAND_PRIMARY;
+const DARK_TOPBAR_DEFAULT = "#1e40af";
 const DEFAULT_APP_NAME = "OlaChat Pro";
 
 const AppThemeRoot = ({ children }) => {
@@ -497,48 +497,52 @@ const AppThemeRoot = ({ children }) => {
                   fontWeight: 400,
                 },
                 // Labels e bordas em Modais (Drawer/Dialog) — sempre legíveis
+                ".MuiDrawer-paper, .MuiDialog-paper": {
+                  backgroundColor: mode === "light" ? "#ffffff !important" : "#252526 !important",
+                  color: mode === "light" ? "#0f172a !important" : "#ffffff !important",
+                },
                 ".MuiDrawer-paper .MuiFormLabel-root, .MuiDialog-paper .MuiFormLabel-root, .MuiDrawer-paper .MuiInputLabel-root, .MuiDialog-paper .MuiInputLabel-root": {
-                  color: mode === "light" ? "#000" : "#E5E7EB",
-                  fontWeight: 400,
+                  color: mode === "light" ? "#0f172a !important" : "#E5E7EB !important",
+                  fontWeight: 500,
                   textTransform: "none",
                   fontSize: "13px"
                 },
                 ".MuiDrawer-paper .MuiTypography-root, .MuiDialog-paper .MuiTypography-root": {
-                  color: mode === "light" ? undefined : "#FFFFFF",
+                  color: mode === "light" ? "#0f172a !important" : "#FFFFFF !important",
                 },
                 ".MuiDrawer-paper .MuiTypography-colorTextSecondary, .MuiDialog-paper .MuiTypography-colorTextSecondary, .MuiDrawer-paper .MuiTypography-caption, .MuiDialog-paper .MuiTypography-caption": {
-                  color: mode === "light" ? undefined : "#E5E7EB !important",
+                  color: mode === "light" ? "#475569 !important" : "#E5E7EB !important",
                 },
                 ".MuiDrawer-paper .MuiIconButton-root, .MuiDialog-paper .MuiIconButton-root, .MuiDrawer-paper .MuiSvgIcon-root, .MuiDialog-paper .MuiSvgIcon-root": {
-                  color: mode === "light" ? undefined : "#FFFFFF",
+                  color: mode === "light" ? "#0f172a !important" : "#FFFFFF !important",
                 },
                 ".MuiDrawer-paper .MuiButton-outlined, .MuiDialog-paper .MuiButton-outlined": {
-                  color: mode === "light" ? undefined : "#FFFFFF",
-                  borderColor: mode === "light" ? undefined : "rgba(255,255,255,0.28)",
+                  color: mode === "light" ? "#0f172a !important" : "#FFFFFF !important",
+                  borderColor: mode === "light" ? "#cbd5e1 !important" : "rgba(255,255,255,0.28) !important",
                 },
                 ".MuiDrawer-paper .MuiButton-text, .MuiDialog-paper .MuiButton-text": {
-                  color: mode === "light" ? undefined : "#E5E7EB",
+                  color: mode === "light" ? "#0f172a !important" : "#E5E7EB !important",
                 },
                 ".MuiDrawer-paper .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline, .MuiDialog-paper .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline": {
                   borderColor:
-                    mode === "light" ? "#E5E7EB" : "rgba(255, 255, 255, 0.22)",
+                    mode === "light" ? "#e2e8f0" : "rgba(255, 255, 255, 0.22)",
                   borderWidth: "1px"
                 },
                 ".MuiDrawer-paper .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline, .MuiDialog-paper .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": {
                   borderColor:
-                    mode === "light" ? "#E5E7EB" : "rgba(255, 255, 255, 0.35)",
+                    mode === "light" ? "#1e40af" : "rgba(255, 255, 255, 0.35)",
                   borderWidth: "1px",
                   boxShadow: "none"
                 },
                 ".MuiDrawer-paper .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline, .MuiDialog-paper .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline": {
                   borderColor:
-                    mode === "light" ? "#E5E7EB" : "rgba(255, 255, 255, 0.3)"
+                    mode === "light" ? "#cbd5e1" : "rgba(255, 255, 255, 0.3)"
                 },
                 ".MuiDrawer-paper .MuiSelect-root, .MuiDialog-paper .MuiSelect-root, .MuiDrawer-paper .MuiInputBase-input, .MuiDialog-paper .MuiInputBase-input": {
-                  color: mode === "light" ? "rgba(0, 0, 0, 0.87)" : "#FFFFFF"
+                  color: mode === "light" ? "#0f172a !important" : "#FFFFFF !important"
                 },
                 ".MuiDrawer-paper .MuiFormHelperText-root, .MuiDialog-paper .MuiFormHelperText-root": {
-                  color: mode === "light" ? "rgba(0, 0, 0, 0.6)" : "#E5E7EB"
+                  color: mode === "light" ? "#475569 !important" : "#E5E7EB !important"
                 },
                 ".MuiDrawer-paper option, .MuiDialog-paper option": {
                   backgroundColor: mode === "light" ? "#fff" : "#3a3a3a",

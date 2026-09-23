@@ -362,23 +362,23 @@ export default function AnthropicAgentEditor({ agentId, onClose, onSaved }) {
         size="small"
         onClick={() => setHelpOpen(true)}
         aria-label="Ajuda agente Claude"
-        style={{ marginRight: 4 }}
+        style={{ marginRight: 4, color: "#ffffff" }}
       >
-        <HelpOutline fontSize="small" />
+        <HelpOutline fontSize="small" style={{ color: "#ffffff" }} />
       </IconButton>
       <Button
         size="small"
         variant="contained"
         color="primary"
-        startIcon={<SaveOutlined />}
+        startIcon={<SaveOutlined style={{ color: "#ffffff" }} />}
         disabled={saving}
         onClick={persist}
-        style={{ textTransform: "none", borderRadius: 10, boxShadow: "none" }}
+        style={{ textTransform: "none", borderRadius: 10, boxShadow: "none", color: "#ffffff", backgroundColor: "#1e40af" }}
       >
         Salvar
       </Button>
       {onClose ? (
-        <Button size="small" onClick={onClose} style={{ textTransform: "none", borderRadius: 10, marginLeft: 8 }}>
+        <Button size="small" onClick={onClose} style={{ textTransform: "none", borderRadius: 10, marginLeft: 8, color: "#ffffff", borderColor: "rgba(255, 255, 255, 0.4)" }} variant="outlined">
           Voltar
         </Button>
       ) : null}

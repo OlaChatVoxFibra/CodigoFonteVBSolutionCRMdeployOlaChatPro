@@ -1757,18 +1757,18 @@ export default function AgentEditorPage() {
     <>
       <Button
         size="small"
-        startIcon={<GetAppOutlined style={{ fontSize: 18 }} />}
+        startIcon={<GetAppOutlined style={{ fontSize: 18, color: "#ffffff" }} />}
         onClick={handleExportJson}
-        style={{ textTransform: "none", borderRadius: 10 }}
+        style={{ textTransform: "none", borderRadius: 10, color: "#ffffff", borderColor: "rgba(255, 255, 255, 0.4)" }}
       >
         Exportar JSON
       </Button>
       <Button
         size="small"
         variant="outlined"
-        startIcon={<ArrowBack style={{ fontSize: 18 }} />}
+        startIcon={<ArrowBack style={{ fontSize: 18, color: "#ffffff" }} />}
         onClick={handleBack}
-        style={{ textTransform: "none", borderRadius: 10, boxShadow: "none", marginLeft: 4 }}
+        style={{ textTransform: "none", borderRadius: 10, boxShadow: "none", marginLeft: 4, color: "#ffffff", borderColor: "rgba(255, 255, 255, 0.4)" }}
       >
         Voltar
       </Button>
@@ -1776,10 +1776,10 @@ export default function AgentEditorPage() {
         size="small"
         variant="contained"
         color="primary"
-        startIcon={<SaveOutlined />}
+        startIcon={<SaveOutlined style={{ color: "#ffffff" }} />}
         disabled={saving}
         onClick={persist}
-        style={{ textTransform: "none", borderRadius: 10, boxShadow: "none", marginLeft: 4 }}
+        style={{ textTransform: "none", borderRadius: 10, boxShadow: "none", marginLeft: 4, color: "#ffffff", backgroundColor: "#1e40af" }}
       >
         Salvar
       </Button>

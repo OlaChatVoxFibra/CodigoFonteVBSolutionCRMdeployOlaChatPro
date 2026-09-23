@@ -17,6 +17,7 @@ import Ticket from "../../components/Ticket";
 import { i18n } from "../../translate/i18n";
 import logo from "../../assets/olachat-logo-light.png";
 import logoDark from "../../assets/olachat-logo-dark.png";
+import logoTicketsLight from "../../assets/olachat-logo-tickets-modo claro.png";
 
 /** Cinza painel tickets (escuro): explícito para não cair em preto se token custom faltar no tema) */
 const DARK_TICKETS_PANEL = "#48484b";
@@ -126,7 +127,7 @@ const Chat = () => {
 	const { ticketId } = useParams();
 	const isLight = (theme.palette && theme.palette.type === "light") || theme.mode === "light";
 	const welcomeLogoSrc = isLight
-		? (typeof theme.calculatedLogoLight === "function" ? theme.calculatedLogoLight() : (theme.appLogoLight || logo))
+		? logoTicketsLight
 		: (theme.appLogoTickets && String(theme.appLogoTickets).trim() !== ""
 			? theme.appLogoTickets
 			: (typeof theme.calculatedLogoDark === "function" ? theme.calculatedLogoDark() : (theme.appLogoDark || logoDark)));
