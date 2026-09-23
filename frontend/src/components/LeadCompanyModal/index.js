@@ -115,26 +115,30 @@ export default function LeadCompanyModal({ open, initialValues, onClose, onSave 
 
   useEffect(() => {
     const load = async () => {
+      let contactList = [];
+      let userList = [];
       try {
-        const [contactsRes, usersRes] = await Promise.all([
-          api.get("/contacts/list"),
-          api.get("/users")
-        ]);
-        const contactList = contactsRes.data || [];
-        const userList = usersRes.data?.users || usersRes.data || [];
-        setContacts(contactList);
-        setUsers(userList);
-        if (initialValues?.contactId) {
-          const c = contactList.find(x => x.id === initialValues.contactId);
-          if (c) setSelectedContact(c);
-        }
-        if (initialValues?.responsibleId || initialValues?.userId) {
-          const uid = initialValues.responsibleId || initialValues.userId;
-          const u = userList.find(x => x.id === uid);
-          if (u) setSelectedUser(u);
-        }
-      } catch (err) {
-        toastError(err);
+        const contactsRes = await api.get("/contacts/list").catch(() => ({ data: [] }));
+        contactList = contactsRes.data || [];
+      } catch (_) {}
+
+      try {
+        const usersRes = await api.get("/users", { params: { searchParam: "" } }).catch(() => null)
+          || await api.get("/users/list").catch(() => null);
+        userList = usersRes?.data?.users || usersRes?.data || [];
+      } catch (_) {}
+
+      setContacts(contactList);
+      setUsers(userList);
+
+      if (initialValues?.contactId) {
+        const c = contactList.find(x => String(x.id) === String(initialValues.contactId));
+        if (c) setSelectedContact(c);
+      }
+      if (initialValues?.responsibleId || initialValues?.userId) {
+        const uid = initialValues.responsibleId || initialValues.userId;
+        const u = userList.find(x => String(x.id) === String(uid));
+        if (u) setSelectedUser(u);
       }
     };
     if (open) load();

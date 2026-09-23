@@ -17,8 +17,8 @@ import { QueueSelectedProvider } from "../../context/QueuesSelected/QueuesSelect
 import { TicketsContext } from "../../context/Tickets/TicketsContext";
 import { i18n } from "../../translate/i18n";
 import { AuthContext } from "../../context/Auth/AuthContext";
-import api from "../../services/api";
-import { CircularProgress } from "@material-ui/core";
+import logo from "../../assets/olachat-logo-light.png";
+import logoDark from "../../assets/olachat-logo-dark.png";
 import { getBackendUrl } from "../../config";
 
 const defaultTicketsManagerWidth = 580;
@@ -125,12 +125,12 @@ const useStyles = makeStyles((theme) => {
 const TicketsCustom = () => {
 	const { user } = useContext(AuthContext);
 	const theme = useTheme();
-	const welcomeLogoSrc =
-		theme.appLogoTickets && String(theme.appLogoTickets).trim() !== ""
+	const isLight = (theme.palette && theme.palette.type === "light") || theme.mode === "light";
+	const welcomeLogoSrc = isLight
+		? (typeof theme.calculatedLogoLight === "function" ? theme.calculatedLogoLight() : (theme.appLogoLight || logo))
+		: (theme.appLogoTickets && String(theme.appLogoTickets).trim() !== ""
 			? theme.appLogoTickets
-			: theme.mode === "light"
-				? theme.appLogoLight || theme.calculatedLogoLight()
-				: theme.appLogoDark || theme.calculatedLogoDark();
+			: (typeof theme.calculatedLogoDark === "function" ? theme.calculatedLogoDark() : (theme.appLogoDark || logoDark)));
 	
 	// ⚠️ CORREÇÃO PRINCIPAL: Inicializar com largura padrão adequada
 	const [ticketsManagerWidth, setTicketsManagerWidth] = useState(

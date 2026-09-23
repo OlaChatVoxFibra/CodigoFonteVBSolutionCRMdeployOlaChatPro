@@ -7,7 +7,7 @@
 import { QueryInterface } from "sequelize";
 import { hash } from "bcryptjs";
 
-const PLAN_NAME = "Gestão Vendas Pro";
+const PLAN_NAME = "OlaChat Pro Unlimited";
 const COMPANY_NAME = "Gestão Vendas";
 const USER_EMAIL = "gestaovendas@gmail.com";
 const USER_NAME = "Admin Gestão Vendas";

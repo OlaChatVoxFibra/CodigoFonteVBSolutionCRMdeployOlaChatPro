@@ -7,7 +7,7 @@
 import { QueryInterface } from "sequelize";
 import { hash } from "bcryptjs";
 
-const PLAN_NAME = "Admin Local Unlimited";
+const PLAN_NAME = "OlaChat Pro Unlimited";
 const COMPANY_NAME = "VB Solution Admin";
 const USER_EMAIL = "admin@local.dev";
 const USER_NAME = "Admin Local";

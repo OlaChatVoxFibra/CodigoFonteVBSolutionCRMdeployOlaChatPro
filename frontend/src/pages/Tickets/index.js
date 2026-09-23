@@ -124,12 +124,12 @@ const Chat = () => {
 	const classes = useStyles();
 	const theme = useTheme();
 	const { ticketId } = useParams();
-	const welcomeLogoSrc =
-		theme.appLogoTickets && String(theme.appLogoTickets).trim() !== ""
+	const isLight = (theme.palette && theme.palette.type === "light") || theme.mode === "light";
+	const welcomeLogoSrc = isLight
+		? (typeof theme.calculatedLogoLight === "function" ? theme.calculatedLogoLight() : (theme.appLogoLight || logo))
+		: (theme.appLogoTickets && String(theme.appLogoTickets).trim() !== ""
 			? theme.appLogoTickets
-			: theme.mode === "light"
-				? theme.appLogoLight || logo
-				: theme.appLogoDark || logoDark;
+			: (typeof theme.calculatedLogoDark === "function" ? theme.calculatedLogoDark() : (theme.appLogoDark || logoDark)));
 
 	return (
 		<div className={classes.chatContainer}>

@@ -71,8 +71,8 @@ const PageHelpButton = ({ topic, title, style, size = "small", variant, buttonCl
   const iconStyle = isAiBrain
     ? { color: "inherit", fontSize: 16, opacity: 1 }
     : isTopbar
-    ? topbarSvgIconStyle(style?.color || "inherit")
-    : undefined;
+    ? topbarSvgIconStyle(style?.color || "rgba(255, 255, 255, 0.95)")
+    : { color: style?.color || "rgba(255, 255, 255, 0.9)" };
 
 
 

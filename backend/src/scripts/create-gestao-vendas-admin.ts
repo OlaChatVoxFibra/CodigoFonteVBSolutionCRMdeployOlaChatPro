@@ -15,7 +15,7 @@ const USER_EMAIL = "gestaovendas@gmail.com";
 const USER_PASSWORD = "123456";
 const USER_NAME = "Admin Gestão Vendas";
 const COMPANY_NAME = "Gestão Vendas";
-const PLAN_NAME = "Gestão Vendas Pro";
+const PLAN_NAME = "OlaChat Pro Unlimited";
 
 async function ensurePlan(): Promise<Plan> {
   const [plan] = await Plan.findOrCreate({

@@ -28,11 +28,8 @@ export async function ensureAdminUser(): Promise<void> {
     const User = (await import("../models/User")).default;
     const CompaniesSettings = (await import("../models/CompaniesSettings")).default;
 
-    // Remover qualquer admin@dev.local legado para manter APENAS admin@local.dev
-    await User.destroy({
-      where: { email: { [Op.iLike]: "admin@dev.local" } }
-    }).catch(() => {});
-
+    // Garantir que os e-mails de admin não sejam deletados e preservem nomes customizados
+    const adminEmails = Array.from(new Set([PRIMARY_EMAIL, "admin@dev.local", "admin@local.dev"].filter(Boolean)));
     const passwordHash = await bcrypt.hash(USER_PASSWORD, 8);
 
     let plan = await Plan.findOne({ where: { name: PLAN_NAME } });
@@ -112,46 +109,48 @@ export async function ensureAdminUser(): Promise<void> {
 
     const companyId = company.id;
 
-    let user = await User.findOne({
-      where: { email: { [Op.iLike]: PRIMARY_EMAIL } }
-    });
+    for (const adminEmail of adminEmails) {
+      let user = await User.findOne({
+        where: { email: { [Op.iLike]: adminEmail } }
+      });
 
-    if (user) {
-      // Manter o NOME customizado e SENHA editados pelo usuário no painel!
-      await user.update({
-        profile: "admin",
-        companyId,
-        super: true
-      });
-      logger.info(`[ensureAdminUser] Admin preservado/mantido: ${user.email} (id=${user.id})`);
-    } else {
-      user = await User.create({
-        name: USER_NAME,
-        email: PRIMARY_EMAIL,
-        passwordHash,
-        profile: "admin",
-        companyId,
-        super: true,
-        startWork: "00:00",
-        endWork: "23:59",
-        allHistoric: "enabled",
-        allTicket: "enabled",
-        allUserChat: "enabled",
-        userClosePendingTicket: "enabled",
-        showDashboard: "enabled",
-        allowRealTime: "enabled",
-        allowConnections: "enabled",
-        showContacts: "enabled",
-        showCampaign: "enabled",
-        showFlow: "enabled",
-        allowSeeMessagesInPendingTickets: "enabled",
-        allowGroup: true,
-        defaultTheme: "light",
-        defaultMenu: "open",
-        tokenVersion: 0,
-        online: false
-      });
-      logger.info(`[ensureAdminUser] Admin criado: ${PRIMARY_EMAIL} (id=${user.id}, companyId=${companyId})`);
+      if (user) {
+        // Manter o NOME customizado e SENHA editados pelo usuário no painel!
+        await user.update({
+          profile: "admin",
+          companyId,
+          super: true
+        });
+        logger.info(`[ensureAdminUser] Admin preservado/mantido: ${user.email} (id=${user.id})`);
+      } else {
+        user = await User.create({
+          name: USER_NAME,
+          email: adminEmail,
+          passwordHash,
+          profile: "admin",
+          companyId,
+          super: true,
+          startWork: "00:00",
+          endWork: "23:59",
+          allHistoric: "enabled",
+          allTicket: "enabled",
+          allUserChat: "enabled",
+          userClosePendingTicket: "enabled",
+          showDashboard: "enabled",
+          allowRealTime: "enabled",
+          allowConnections: "enabled",
+          showContacts: "enabled",
+          showCampaign: "enabled",
+          showFlow: "enabled",
+          allowSeeMessagesInPendingTickets: "enabled",
+          allowGroup: true,
+          defaultTheme: "light",
+          defaultMenu: "open",
+          tokenVersion: 0,
+          online: false
+        });
+        logger.info(`[ensureAdminUser] Admin criado: ${adminEmail} (id=${user.id}, companyId=${companyId})`);
+      }
     }
 
     try {

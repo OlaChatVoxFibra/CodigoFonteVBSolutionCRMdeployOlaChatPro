@@ -562,7 +562,7 @@ const Projects = () => {
         onClick={handleToggleKanbanFullscreen}
         color="default"
         size="small"
-        style={{ color: '#6b7280', padding: 4, width: 32, height: 32 }}
+        style={{ color: 'rgba(255, 255, 255, 0.9)', padding: 4, width: 32, height: 32 }}
       >
         {isFullscreen ? <FullscreenExitIcon style={{ fontSize: 18 }} /> : <ZoomOutMapIcon style={{ fontSize: 18 }} />}
       </IconButton>
@@ -570,7 +570,7 @@ const Projects = () => {
         title="Configurações"
         color="default"
         size="small"
-        style={{ color: '#6b7280', padding: 4, width: 32, height: 32 }}
+        style={{ color: 'rgba(255, 255, 255, 0.9)', padding: 4, width: 32, height: 32 }}
         onClick={() => setStagesDrawerOpen(true)}
       >
         <SettingsIcon style={{ fontSize: 18 }} />
