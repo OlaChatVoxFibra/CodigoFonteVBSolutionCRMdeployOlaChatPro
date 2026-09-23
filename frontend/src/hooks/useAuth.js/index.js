@@ -310,18 +310,22 @@ const useAuth = () => {
       });
       
       if (socketInstance) {
-        setSocket(socketInstance);
+        if (socketRef.current !== socketInstance) {
+          setSocket(socketInstance);
+        }
 
-        // Aguardar um pouco para garantir que o socket está configurado
-        setTimeout(() => {
-          const eventName = `company-${socketCompanyId}-user`;
-          
-          const handleUserUpdate = (data) => {
-            if (data.action === "update" && data.user.id === user.id) {
-              const u = data.user;
-              setUser({ ...u, queues: Array.isArray(u?.queues) ? u.queues : [] });
-            }
-          };
+        const eventName = `company-${socketCompanyId}-user`;
+        const handleUserUpdate = (data) => {
+          if (data.action === "update" && data.user?.id === user.id) {
+            const u = data.user;
+            setUser((prev) => {
+              if (prev && prev.name === u.name && prev.email === u.email && prev.profile === u.profile && prev.profileImage === u.profileImage) {
+                return prev;
+              }
+              return { ...prev, ...u, queues: Array.isArray(u?.queues) ? u.queues : prev?.queues || [] };
+            });
+          }
+        };
 
           // Verificar se o socket tem o método 'on'
           if (socketInstance && typeof socketInstance.on === 'function') {

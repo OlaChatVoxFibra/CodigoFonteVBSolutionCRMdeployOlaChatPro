@@ -15,15 +15,11 @@ const COMPANY_NAME =
 const USER_NAME =
   (process.env.SEED_ADMIN_NAME || "Admin OlaChat Pro").trim();
 const PRIMARY_EMAIL =
-  (process.env.SEED_ADMIN_EMAIL || "admin@dev.local").trim().toLowerCase();
-const FALLBACK_EMAIL =
-  (process.env.SEED_ADMIN_ALT_EMAIL || "admin@local.dev").trim().toLowerCase();
+  (process.env.SEED_ADMIN_EMAIL || "admin@local.dev").trim().toLowerCase();
 const USER_PASSWORD = process.env.SEED_ADMIN_PASSWORD || "123456";
 const DUE_DATE = "2099-12-31T00:00:00.000Z";
 
-export const ADMIN_EMAILS = [PRIMARY_EMAIL, FALLBACK_EMAIL].filter(
-  (v, i, a) => a.indexOf(v) === i && Boolean(v)
-);
+export const ADMIN_EMAILS = [PRIMARY_EMAIL].filter(Boolean);
 
 export async function ensureAdminUser(): Promise<void> {
   try {
@@ -31,6 +27,11 @@ export async function ensureAdminUser(): Promise<void> {
     const Company = (await import("../models/Company")).default;
     const User = (await import("../models/User")).default;
     const CompaniesSettings = (await import("../models/CompaniesSettings")).default;
+
+    // Remover qualquer admin@dev.local legado para manter APENAS admin@local.dev
+    await User.destroy({
+      where: { email: { [Op.iLike]: "admin@dev.local" } }
+    }).catch(() => {});
 
     const passwordHash = await bcrypt.hash(USER_PASSWORD, 8);
 
@@ -81,11 +82,7 @@ export async function ensureAdminUser(): Promise<void> {
     }
 
     let company = await Company.findOne({
-      where: {
-        [Op.or]: ADMIN_EMAILS.map((email) => ({
-          email: { [Op.iLike]: email }
-        }))
-      }
+      where: { email: { [Op.iLike]: PRIMARY_EMAIL } }
     });
 
     if (!company) {
@@ -115,65 +112,46 @@ export async function ensureAdminUser(): Promise<void> {
 
     const companyId = company.id;
 
-    for (const email of ADMIN_EMAILS) {
-      let user = await User.findOne({
-        where: { email: { [Op.iLike]: email } }
-      });
+    let user = await User.findOne({
+      where: { email: { [Op.iLike]: PRIMARY_EMAIL } }
+    });
 
-      if (user) {
-        await user.update({
-          name: USER_NAME,
-          passwordHash,
-          profile: "admin",
-          companyId,
-          super: true,
-          startWork: "00:00",
-          endWork: "23:59",
-          allHistoric: "enabled",
-          allTicket: "enabled",
-          allUserChat: "enabled",
-          userClosePendingTicket: "enabled",
-          showDashboard: "enabled",
-          allowRealTime: "enabled",
-          allowConnections: "enabled",
-          showContacts: "enabled",
-          showCampaign: "enabled",
-          showFlow: "enabled",
-          allowSeeMessagesInPendingTickets: "enabled",
-          allowGroup: true,
-          defaultTheme: "light",
-          defaultMenu: "open"
-        });
-        logger.info(`[ensureAdminUser] Admin atualizado: ${user.email} (id=${user.id})`);
-      } else {
-        user = await User.create({
-          name: USER_NAME,
-          email,
-          passwordHash,
-          profile: "admin",
-          companyId,
-          super: true,
-          startWork: "00:00",
-          endWork: "23:59",
-          allHistoric: "enabled",
-          allTicket: "enabled",
-          allUserChat: "enabled",
-          userClosePendingTicket: "enabled",
-          showDashboard: "enabled",
-          allowRealTime: "enabled",
-          allowConnections: "enabled",
-          showContacts: "enabled",
-          showCampaign: "enabled",
-          showFlow: "enabled",
-          allowSeeMessagesInPendingTickets: "enabled",
-          allowGroup: true,
-          defaultTheme: "light",
-          defaultMenu: "open",
-          tokenVersion: 0,
-          online: false
-        });
-        logger.info(`[ensureAdminUser] Admin criado: ${email} (id=${user.id}, companyId=${companyId})`);
-      }
+    if (user) {
+      // Manter o NOME customizado e SENHA editados pelo usuário no painel!
+      await user.update({
+        profile: "admin",
+        companyId,
+        super: true
+      });
+      logger.info(`[ensureAdminUser] Admin preservado/mantido: ${user.email} (id=${user.id})`);
+    } else {
+      user = await User.create({
+        name: USER_NAME,
+        email: PRIMARY_EMAIL,
+        passwordHash,
+        profile: "admin",
+        companyId,
+        super: true,
+        startWork: "00:00",
+        endWork: "23:59",
+        allHistoric: "enabled",
+        allTicket: "enabled",
+        allUserChat: "enabled",
+        userClosePendingTicket: "enabled",
+        showDashboard: "enabled",
+        allowRealTime: "enabled",
+        allowConnections: "enabled",
+        showContacts: "enabled",
+        showCampaign: "enabled",
+        showFlow: "enabled",
+        allowSeeMessagesInPendingTickets: "enabled",
+        allowGroup: true,
+        defaultTheme: "light",
+        defaultMenu: "open",
+        tokenVersion: 0,
+        online: false
+      });
+      logger.info(`[ensureAdminUser] Admin criado: ${PRIMARY_EMAIL} (id=${user.id}, companyId=${companyId})`);
     }
 
     try {

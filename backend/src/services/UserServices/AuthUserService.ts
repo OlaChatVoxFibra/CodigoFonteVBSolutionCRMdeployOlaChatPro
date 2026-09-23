@@ -74,8 +74,6 @@ const AuthUserService = async ({
   const knownAdminSet = new Set(
     [
       process.env.SEED_ADMIN_EMAIL,
-      process.env.SEED_ADMIN_ALT_EMAIL,
-      "admin@dev.local",
       "admin@local.dev"
     ]
       .map((v) => String(v || "").trim().toLowerCase())
