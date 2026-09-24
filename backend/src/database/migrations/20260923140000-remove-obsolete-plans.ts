@@ -21,7 +21,7 @@ module.exports = {
       if (!fallbackRows.length) {
         // Se não encontrar o fallback, buscar qualquer outro plano disponível
         [fallbackRows] = (await queryInterface.sequelize.query(
-          `SELECT id FROM "Plans" WHERE name NOT IN (:...plans) ORDER BY id ASC LIMIT 1;`,
+          `SELECT id FROM "Plans" WHERE name NOT IN (:plans) ORDER BY id ASC LIMIT 1;`,
           { transaction: t, replacements: { plans: PLANS_TO_REMOVE } }
         )) as [{ id: number }[], unknown];
       }
@@ -35,7 +35,7 @@ module.exports = {
           UPDATE "Companies"
           SET "planId" = :fallbackId
           WHERE "planId" IN (
-            SELECT id FROM "Plans" WHERE name IN (:...plans)
+            SELECT id FROM "Plans" WHERE name IN (:plans)
           );
           `,
           {
@@ -47,7 +47,7 @@ module.exports = {
 
       // 3. Deletar os planos obsoletos da tabela Plans
       await queryInterface.sequelize.query(
-        `DELETE FROM "Plans" WHERE name IN (:...plans);`,
+        `DELETE FROM "Plans" WHERE name IN (:plans);`,
         {
           transaction: t,
           replacements: { plans: PLANS_TO_REMOVE }

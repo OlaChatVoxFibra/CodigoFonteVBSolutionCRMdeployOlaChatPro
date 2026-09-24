@@ -153,7 +153,7 @@ const initialStateSchedule = [
   { weekday: "Domingo", weekdayEn: "sunday", startTimeA: "08:00", endTimeA: "12:00", startTimeB: "13:00", endTimeB: "18:00" },
 ];
 
-const QueueModal = ({ open, onClose, queueId, onEdit }) => {
+const QueueModal = ({ open, onClose, queueId, onEdit, onSave }) => {
   const classes = useStyles();
   const isEdit = Boolean(queueId);
   const [queue, setQueue] = useState(initialState);
@@ -235,7 +235,8 @@ const QueueModal = ({ open, onClose, queueId, onEdit }) => {
         const { data } = await api.put(`/queue/${queueId}`, payload);
         onEdit?.(data);
       } else {
-        await api.post("/queue", payload);
+        const { data } = await api.post("/queue", payload);
+        onSave?.(data);
       }
       toast.success(i18n.t("queues.toasts.success"));
       handleClose();

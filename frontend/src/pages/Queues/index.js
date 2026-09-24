@@ -62,10 +62,18 @@ const useStyles = makeStyles((theme) => ({
 
 const reducer = (state, action) => {
   if (action.type === "LOAD_QUEUES") {
-    const queues = action.payload;
+    const raw = action.payload;
+    const queues = Array.isArray(raw)
+      ? raw
+      : Array.isArray(raw?.queues)
+      ? raw.queues
+      : Array.isArray(raw?.data)
+      ? raw.data
+      : [];
     const newQueues = [];
 
     queues.forEach((queue) => {
+      if (!queue || queue.id == null) return;
       const queueIndex = state.findIndex((q) => q.id === queue.id);
       if (queueIndex !== -1) {
         state[queueIndex] = queue;
@@ -79,6 +87,7 @@ const reducer = (state, action) => {
 
   if (action.type === "UPDATE_QUEUES") {
     const queue = action.payload;
+    if (!queue || queue.id == null) return state;
     const queueIndex = state.findIndex((u) => u.id === queue.id);
 
     if (queueIndex !== -1) {
@@ -113,27 +122,34 @@ const Queues = ({ renderAsTab }) => {
   const [queueModalOpen, setQueueModalOpen] = useState(false);
   const [selectedQueue, setSelectedQueue] = useState(null);
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
-  //   const socketManager = useContext(SocketContext);
   const { user, socket } = useContext(AuthContext);
   const companyId = user.companyId;
 
   const Container = renderAsTab ? ({ children }) => <>{children}</> : ActivitiesStyleLayout;
 
+  const fetchQueues = React.useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data } = await api.get("/queue");
+      const list = Array.isArray(data)
+        ? data
+        : Array.isArray(data?.queues)
+        ? data.queues
+        : Array.isArray(data?.data)
+        ? data.data
+        : [];
+      dispatch({ type: "RESET" });
+      dispatch({ type: "LOAD_QUEUES", payload: list });
+      setLoading(false);
+    } catch (err) {
+      toastError(err);
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    (async () => {
-      setLoading(true);
-      try {
-        const { data } = await api.get("/queue");
-        dispatch({ type: "LOAD_QUEUES", payload: data });
-
-        setLoading(false);
-      } catch (err) {
-        toastError(err);
-        setLoading(false);
-      }
-    })();
-  }, []);
+    fetchQueues();
+  }, [fetchQueues]);
 
   useEffect(() => {
 
@@ -177,6 +193,7 @@ const Queues = ({ renderAsTab }) => {
     try {
       await api.delete(`/queue/${queueId}`);
       toast.success(i18n.t("Queue deleted successfully!"));
+      fetchQueues();
     } catch (err) {
       toastError(err);
     }
@@ -201,7 +218,11 @@ const Queues = ({ renderAsTab }) => {
         open={queueModalOpen}
         onClose={handleCloseQueueModal}
         queueId={selectedQueue?.id}
+        onSave={() => {
+          fetchQueues();
+        }}
         onEdit={(res) => {
+          fetchQueues();
           if (res) {
             setTimeout(() => {
               handleEditQueue(res)

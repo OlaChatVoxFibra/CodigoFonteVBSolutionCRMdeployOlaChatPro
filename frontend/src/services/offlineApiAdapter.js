@@ -374,6 +374,9 @@ function handleCollectionRoute(method, path, params, body) {
 
     // collection root
     if (method === "get") {
+      if (route.name === "queues") {
+        return listCollection("queues");
+      }
       return listResponse(route.listKey, listCollection(route.name), params);
     }
     if (method === "post") {

@@ -8,6 +8,19 @@ const FLAG_KEY = "vbs_offline_mode";
 
 export function isOfflineMode() {
   if (typeof window === "undefined") return false;
+  try {
+    const host = window.location.hostname;
+    // Se não estiver em localhost/127.0.0.1, forçar modo online e limpar a flag
+    if (host !== "localhost" && host !== "127.0.0.1") {
+      if (localStorage.getItem(FLAG_KEY) === "1") {
+        localStorage.removeItem(FLAG_KEY);
+      }
+      window.__VBS_OFFLINE_MODE__ = false;
+      return false;
+    }
+  } catch {
+    /* ignore */
+  }
   if (window.__VBS_OFFLINE_MODE__ === true) return true;
   try {
     return localStorage.getItem(FLAG_KEY) === "1";
@@ -18,6 +31,16 @@ export function isOfflineMode() {
 
 export function setOfflineMode(enabled) {
   if (typeof window === "undefined") return;
+  try {
+    const host = window.location.hostname;
+    if (host !== "localhost" && host !== "127.0.0.1") {
+      window.__VBS_OFFLINE_MODE__ = false;
+      localStorage.removeItem(FLAG_KEY);
+      return;
+    }
+  } catch {
+    /* ignore */
+  }
   window.__VBS_OFFLINE_MODE__ = !!enabled;
   try {
     if (enabled) localStorage.setItem(FLAG_KEY, "1");
