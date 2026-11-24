@@ -396,16 +396,22 @@ const AllConnections = ({ renderAsTab }) => {
     }
   };
 
-  const handleStartWhatsAppSession = async (whatsAppId) => {
+  const handleStartWhatsAppSession = async (whatsAppId, whatsApp) => {
     try {
+      const target = whatsApp || { id: whatsAppId };
+      setSelectedWhatsApp(target);
+      setQrModalOpen(true);
       await api.post(`/whatsappsession/${whatsAppId}`);
     } catch (err) {
       toastError(err);
     }
   };
 
-  const handleRequestNewQrCode = async (whatsAppId) => {
+  const handleRequestNewQrCode = async (whatsAppId, whatsApp) => {
     try {
+      const target = whatsApp || { id: whatsAppId };
+      setSelectedWhatsApp(target);
+      setQrModalOpen(true);
       await api.put(`/whatsappsession/${whatsAppId}`);
     } catch (err) {
       toastError(err);
@@ -502,7 +508,7 @@ const AllConnections = ({ renderAsTab }) => {
               size="small"
               variant="outlined"
               color="primary"
-              onClick={() => handleStartWhatsAppSession(whatsApp.id)}
+              onClick={() => handleStartWhatsAppSession(whatsApp.id, whatsApp)}
             >
               {i18n.t("connections.buttons.tryAgain")}
             </Button>{" "}
@@ -510,7 +516,7 @@ const AllConnections = ({ renderAsTab }) => {
               size="small"
               variant="outlined"
               color="secondary"
-              onClick={() => handleRequestNewQrCode(whatsApp.id)}
+              onClick={() => handleRequestNewQrCode(whatsApp.id, whatsApp)}
             >
               {i18n.t("connections.buttons.newQr")}
             </Button>
@@ -842,6 +848,7 @@ const AllConnections = ({ renderAsTab }) => {
         open={qrModalOpen}
         onClose={handleCloseQrModal}
         whatsAppId={!whatsAppModalOpen && selectedWhatsApp?.id}
+        companyId={selectedWhatsApp?.companyId}
       />
       <WhatsAppModalCompany
         open={whatsAppModalOpen}

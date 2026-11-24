@@ -155,7 +155,8 @@ const messages = {
         success: "WhatsApp başarılı bir şekilde kaydedildi."
       },
       qrCode: {
-        message: "Oturumu başlatmak için QR Kodu okuyun."
+        message: "Oturumu başlatmak için QR Kodu okuyun.",
+        waiting: "QR Kod bekleniyor...",
       },
       fastResponses: {
         title: "Hızlı Yanıtlar",

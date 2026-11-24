@@ -516,6 +516,11 @@ const ConnectionsTypePage = () => {
 
   const handleStartWhatsAppSession = async (whatsAppId) => {
     try {
+      const target =
+        whatsApps.find((w) => Number(w.id) === Number(whatsAppId)) ||
+        { id: whatsAppId };
+      setSelectedWhatsApp(target);
+      setQrModalOpen(true);
       await api.post(`/whatsappsession/${whatsAppId}`);
     } catch (err) {
       toastError(err);
@@ -524,6 +529,11 @@ const ConnectionsTypePage = () => {
 
   const handleRequestNewQrCode = async (whatsAppId) => {
     try {
+      const target =
+        whatsApps.find((w) => Number(w.id) === Number(whatsAppId)) ||
+        { id: whatsAppId };
+      setSelectedWhatsApp(target);
+      setQrModalOpen(true);
       await api.put(`/whatsappsession/${whatsAppId}`);
     } catch (err) {
       toastError(err);

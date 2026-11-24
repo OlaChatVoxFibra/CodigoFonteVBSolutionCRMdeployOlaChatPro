@@ -5,36 +5,71 @@
  */
 
 import { Request, Response } from "express";
-import { getWbot } from "../libs/wbot";
 import ShowWhatsAppService from "../services/WhatsappService/ShowWhatsAppService";
 import { StartWhatsAppSession } from "../services/WbotServices/StartWhatsAppSession";
-import UpdateWhatsAppService from "../services/WhatsappService/UpdateWhatsAppService";
-import DeleteBaileysService from "../services/BaileysServices/DeleteBaileysService";
-import cacheLayer from "../libs/cache";
-import Whatsapp from "../models/Whatsapp";
+import { resetBaileysAuthState } from "../libs/wbot";
 import { getIO } from "../libs/socket";
+import logger from "../utils/logger";
+
+const assertWhatsAppWebChannel = (channel: string | null | undefined): string | null => {
+  if (channel === "telegram" || channel === "telegram_oficial") {
+    return "Esta conexão é Telegram. Use o botão Login / Webhook na tela de conexões, não o fluxo de QR do WhatsApp.";
+  }
+  if (channel === "whatsapp_oficial") {
+    return "WhatsApp Oficial (Cloud API) não usa QR Code. Configure o Embedded Signup / tokens Meta.";
+  }
+  if (channel && channel !== "whatsapp") {
+    return "Tipo de conexão sem sessão WhatsApp (QR Code).";
+  }
+  return null;
+};
+
+/** Limpa auth Baileys e inicia sessão limpa para gerar QR em qualquer conta. */
+const hardResetAndStartQrSession = async (
+  whatsapp: Awaited<ReturnType<typeof ShowWhatsAppService>>,
+  companyId: number
+): Promise<void> => {
+  await resetBaileysAuthState(whatsapp.id, { logout: true });
+
+  await whatsapp.update({
+    session: "",
+    qrcode: "",
+    status: "OPENING",
+    retries: 0,
+    number: ""
+  });
+  await whatsapp.reload();
+
+  const io = getIO();
+  const sessionCompanyId = whatsapp.companyId || companyId;
+  io.of("/" + String(sessionCompanyId)).emit(
+    `company-${sessionCompanyId}-whatsappSession`,
+    {
+      action: "update",
+      session: whatsapp
+    }
+  );
+
+  await StartWhatsAppSession(whatsapp, sessionCompanyId);
+};
 
 const store = async (req: Request, res: Response): Promise<Response> => {
   const { whatsappId } = req.params;
   const { companyId, id: userId } = req.user;
 
-  // console.log("STARTING SESSION", whatsappId)
   const whatsapp = await ShowWhatsAppService(whatsappId, companyId, undefined, +userId);
 
-  if (whatsapp.channel === "telegram" || whatsapp.channel === "telegram_oficial") {
-    return res.status(400).json({
-      error:
-        "Esta conexão é Telegram. Use o botão Login / Webhook na tela de conexões, não o fluxo de QR do WhatsApp."
-    });
+  const channelError = assertWhatsAppWebChannel(whatsapp.channel);
+  if (channelError) {
+    return res.status(400).json({ error: channelError });
   }
 
-  if (whatsapp.channel !== "whatsapp" && whatsapp.channel !== "whatsapp_oficial") {
-    return res.status(400).json({
-      error: "Tipo de conexão sem sessão WhatsApp (QR Code)."
-    });
+  try {
+    await hardResetAndStartQrSession(whatsapp, companyId);
+  } catch (err) {
+    logger.error({ err, whatsappId }, "Falha ao iniciar sessão WhatsApp (store)");
+    return res.status(500).json({ error: "Falha ao iniciar sessão WhatsApp." });
   }
-
-  await StartWhatsAppSession(whatsapp, companyId);
 
   return res.status(200).json({ message: "Starting session." });
 };
@@ -45,10 +80,16 @@ const update = async (req: Request, res: Response): Promise<Response> => {
 
   const whatsapp = await ShowWhatsAppService(whatsappId, companyId, undefined, +userId);
 
-  await whatsapp.update({ session: "" });
+  const channelError = assertWhatsAppWebChannel(whatsapp.channel);
+  if (channelError) {
+    return res.status(400).json({ error: channelError });
+  }
 
-  if (whatsapp.channel === "whatsapp") {
-    await StartWhatsAppSession(whatsapp, whatsapp.companyId);
+  try {
+    await hardResetAndStartQrSession(whatsapp, whatsapp.companyId || companyId);
+  } catch (err) {
+    logger.error({ err, whatsappId }, "Falha ao gerar novo QR Code (update)");
+    return res.status(500).json({ error: "Falha ao gerar novo QR Code." });
   }
 
   return res.status(200).json({ message: "Starting session." });
@@ -58,16 +99,28 @@ const remove = async (req: Request, res: Response): Promise<Response> => {
   const { whatsappId } = req.params;
   const { companyId, id: userId } = req.user;
   const io = getIO();
-  console.log("DISCONNECTING SESSION", whatsappId)
+  logger.info(`DISCONNECTING SESSION ${whatsappId}`);
   const whatsapp = await ShowWhatsAppService(whatsappId, companyId, undefined, +userId);
 
-  if (whatsapp.channel === "whatsapp") {
-    await DeleteBaileysService(whatsappId);
+  if (whatsapp.channel === "whatsapp" || !whatsapp.channel) {
+    await resetBaileysAuthState(+whatsappId, { logout: true });
 
-    const wbot = await getWbot(whatsapp.id);
+    await whatsapp.update({
+      status: "DISCONNECTED",
+      qrcode: "",
+      session: "",
+      retries: 0
+    });
+    await whatsapp.reload();
 
-    wbot.logout();
-    wbot.ws.close();
+    const sessionCompanyId = whatsapp.companyId || companyId;
+    io.of("/" + String(sessionCompanyId)).emit(
+      `company-${sessionCompanyId}-whatsappSession`,
+      {
+        action: "update",
+        session: whatsapp
+      }
+    );
   }
 
   return res.status(200).json({ message: "Session disconnected." });

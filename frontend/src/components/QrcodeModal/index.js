@@ -13,6 +13,7 @@ import { i18n } from "../../translate/i18n";
 import api from "../../services/api";
 import { AuthContext } from "../../context/Auth/AuthContext";
 import openSocket from "socket.io-client";
+import { getBackendUrl } from "../../config";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -67,6 +68,22 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
+const sameId = (a, b) => Number(a) === Number(b);
+
+const normalizeSocketToken = (raw) => {
+  if (!raw) return "";
+  let token = raw;
+  try {
+    const parsed = JSON.parse(raw);
+    if (typeof parsed === "string") token = parsed;
+  } catch (_) {
+    // token já é string pura
+  }
+  token = String(token || "").replace(/^"+|"+$/g, "").trim();
+  if (!token) return "";
+  return token.startsWith("Bearer ") ? token : `Bearer ${token}`;
+};
+
 const QrcodeModal = ({ open, onClose, whatsAppId, companyId }) => {
   const classes = useStyles();
   const [qrCode, setQrCode] = useState("");
@@ -77,10 +94,12 @@ const QrcodeModal = ({ open, onClose, whatsAppId, companyId }) => {
     if (!open) return;
 
     // Se companyId for fornecido e diferente do usuário logado (Super Admin)
-    if (companyId && user.companyId && Number(companyId) !== Number(user.companyId)) {
-      const token = localStorage.getItem("token");
-      const newSocket = openSocket(`${process.env.REACT_APP_BACKEND_URL}/${companyId}`, {
-        query: { token }
+    if (companyId && user?.companyId && Number(companyId) !== Number(user.companyId)) {
+      const token = normalizeSocketToken(localStorage.getItem("token"));
+      const backendUrl = getBackendUrl();
+      const newSocket = openSocket(`${backendUrl}/${companyId}`, {
+        query: { token },
+        transports: ["websocket", "polling"],
       });
 
       setSocket(newSocket);
@@ -88,45 +107,74 @@ const QrcodeModal = ({ open, onClose, whatsAppId, companyId }) => {
       return () => {
         newSocket.disconnect();
       };
-    } else {
-      setSocket(globalSocket);
     }
-  }, [open, companyId, user.companyId, globalSocket]);
+
+    setSocket(globalSocket);
+    return undefined;
+  }, [open, companyId, user?.companyId, globalSocket]);
 
   useEffect(() => {
-    const fetchSession = async () => {
-      if (!whatsAppId) return;
+    if (!open || !whatsAppId) return undefined;
 
+    let cancelled = false;
+
+    const fetchSession = async () => {
       try {
-        const { data } = await api.get(`/whatsapp/${whatsAppId}`);
-        setQrCode(data.qrcode);
+        const { data } = await api.get(`/whatsapp/${whatsAppId}`, {
+          params: { _t: Date.now() },
+        });
+        if (cancelled) return;
+        setQrCode(data?.qrcode || "");
       } catch (err) {
-        toastError(err);
+        if (!cancelled) toastError(err);
       }
     };
+
+    setQrCode("");
     fetchSession();
-  }, [whatsAppId]);
+
+    // Reconsulta enquanto o modal aguarda o QR (evita spinner eterno se o socket atrasar)
+    const pollId = setInterval(fetchSession, 2500);
+
+    return () => {
+      cancelled = true;
+      clearInterval(pollId);
+    };
+  }, [whatsAppId, open]);
 
   useEffect(() => {
-    if (!whatsAppId || !socket) return;
-    const socketCompanyId = companyId || user.companyId;
+    if (!open || !whatsAppId || !socket) return undefined;
+    const socketCompanyId = companyId || user?.companyId;
 
     const onWhatsappData = (data) => {
-      if (data.action === "update" && data.session.id === whatsAppId) {
-        setQrCode(data.session.qrcode);
+      if (data?.action !== "update" || !data?.session) return;
+      if (!sameId(data.session.id, whatsAppId)) return;
+
+      const nextQr = data.session.qrcode || "";
+      const nextStatus = String(data.session.status || "").toUpperCase();
+
+      if (nextQr) {
+        setQrCode(nextQr);
+        return;
       }
 
-      if (data.action === "update" && data.session.qrcode === "") {
+      // Só fecha quando esta sessão realmente concluiu / desconectou — não no OPENING
+      if (
+        nextQr === "" &&
+        (nextStatus === "CONNECTED" ||
+          nextStatus === "DISCONNECTED" ||
+          nextStatus === "PENDING")
+      ) {
         onClose();
       }
     };
-    
+
     socket.on(`company-${socketCompanyId}-whatsappSession`, onWhatsappData);
 
     return () => {
       socket.off(`company-${socketCompanyId}-whatsappSession`, onWhatsappData);
     };
-  }, [whatsAppId, onClose, user.companyId, companyId, socket]);
+  }, [whatsAppId, onClose, user?.companyId, companyId, socket, open]);
 
   return (
     <Dialog

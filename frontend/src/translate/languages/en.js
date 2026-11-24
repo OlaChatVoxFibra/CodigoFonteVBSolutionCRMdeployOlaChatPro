@@ -644,6 +644,7 @@ const messages = {
       },
       qrCode: {
         message: "Scan the QR Code to start the session",
+        waiting: "Waiting for QR Code...",
       },
       contacts: {
         title: "Contacts",

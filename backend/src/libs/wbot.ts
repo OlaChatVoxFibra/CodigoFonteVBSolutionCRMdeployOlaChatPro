@@ -165,11 +165,43 @@ export const restartWbot = async (
   }
 };
 
+export const clearQrRetries = (whatsappId: number): void => {
+  retriesQrCodeMap.delete(whatsappId);
+};
+
+/**
+ * Encerra socket em memória + limpa credenciais Baileys (Redis + tabela)
+ * para forçar emissão de novo QR Code em qualquer conta/empresa.
+ */
+export const resetBaileysAuthState = async (
+  whatsappId: number,
+  options: { logout?: boolean } = {}
+): Promise<void> => {
+  const { logout = true } = options;
+  clearQrRetries(whatsappId);
+  try {
+    await removeWbot(whatsappId, logout);
+  } catch (err) {
+    logger.error({ err, whatsappId }, "removeWbot failed during Baileys auth reset");
+  }
+  try {
+    await DeleteBaileysService(whatsappId);
+  } catch (err) {
+    logger.error({ err, whatsappId }, "DeleteBaileysService failed during Baileys auth reset");
+  }
+  try {
+    await cacheLayer.delFromPattern(`sessions:${whatsappId}:*`);
+  } catch (err) {
+    logger.error({ err, whatsappId }, "Redis sessions wipe failed during Baileys auth reset");
+  }
+};
+
 export const removeWbot = async (
   whatsappId: number,
   isLogout = true
 ): Promise<void> => {
   clearSessionRefreshTimer(whatsappId);
+  clearQrRetries(whatsappId);
   try {
     const sessionIndex = sessions.findIndex(s => s.id === whatsappId);
     if (sessionIndex === -1) {
@@ -544,7 +576,7 @@ export const initWASocket = async (whatsapp: Whatsapp): Promise<Session> => {
             await DeleteBaileysService(whatsapp.id);
             // await deleteFolder(folderSessions);
             await cacheLayer.delFromPattern(`sessions:${whatsapp.id}:*`);
-            io.of(String(companyId))
+            io.of("/" + String(companyId))
               .emit(`company-${whatsapp.companyId}-whatsappSession`, {
                 action: "update",
                 session: whatsapp

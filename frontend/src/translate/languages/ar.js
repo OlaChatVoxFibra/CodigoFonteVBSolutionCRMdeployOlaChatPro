@@ -568,6 +568,7 @@ const messages = {
       },
       qrCode: {
         message: "اقرأ رمز QR لبدء الجلسة",
+        waiting: "في انتظار رمز QR...",
       },
       contacts: {
         title: "جهات الاتصال",

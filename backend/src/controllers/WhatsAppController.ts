@@ -7,7 +7,7 @@
 import { Request, Response } from "express";
 import { getIO } from "../libs/socket";
 import cacheLayer from "../libs/cache";
-import { removeWbot, restartWbot } from "../libs/wbot";
+import { removeWbot, restartWbot, resetBaileysAuthState } from "../libs/wbot";
 import Whatsapp from "../models/Whatsapp";
 import AppError from "../errors/AppError";
 import DeleteBaileysService from "../services/BaileysServices/DeleteBaileysService";
@@ -292,10 +292,16 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
   }
 
   if (["whatsapp"].includes(whatsapp.channel)) {
-    // Não aguardar o início da sessão para não bloquear a resposta da API
-    StartWhatsAppSession(whatsapp, targetCompanyId).catch(err => {
-      logger.error(`Error starting WhatsApp session: ${err}`);
-    });
+    // Não aguardar o início da sessão para não bloquear a resposta da API.
+    // Limpa auth residual (Redis) para garantir QR em conexões novas/recriadas.
+    void (async () => {
+      try {
+        await resetBaileysAuthState(whatsapp.id, { logout: false });
+        await StartWhatsAppSession(whatsapp, targetCompanyId);
+      } catch (err) {
+        logger.error(`Error starting WhatsApp session: ${err}`);
+      }
+    })();
   }
 
   const io = getIO();
