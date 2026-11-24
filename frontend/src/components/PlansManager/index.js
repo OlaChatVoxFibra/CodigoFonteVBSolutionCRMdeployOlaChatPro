@@ -819,9 +819,16 @@ export default function PlansManager() {
     setLoading(true);
     try {
       const planList = await list();
-      setRecords(planList);
-    } catch {
+      const normalized = Array.isArray(planList)
+        ? planList
+        : Array.isArray(planList?.plans)
+          ? planList.plans
+          : [];
+      setRecords(normalized);
+    } catch (err) {
+      console.error("[PlansManager] falha ao listar planos:", err);
       toast.error("Não foi possível carregar a lista de planos");
+      setRecords([]);
     }
     setLoading(false);
   };

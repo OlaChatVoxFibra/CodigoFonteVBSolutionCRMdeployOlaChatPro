@@ -88,31 +88,29 @@ export const index = async (req: Request, res: Response): Promise<Response> => {
   const authHeader = req.headers.authorization;
   const [, token] = authHeader.split(" ");
   const decoded = verify(token, authConfig.secret);
-  const { id: requestUserId, profile, companyId } = decoded as TokenPayload;
+  const { id: requestUserId, companyId } = decoded as TokenPayload;
   const requestUser = await User.findByPk(requestUserId);
-  const company = await Company.findByPk(companyId);
-  const PlanCompany = company.planId;
-  const plans = await Plan.findByPk(PlanCompany);
-  const plansName = plans.name;
 
-  if (requestUser.super === true) {
+  if (requestUser?.super === true) {
     const { plans, count, hasMore } = await ListPlansService({
       searchParam,
       pageNumber
     });
 
     return res.json({ plans, count, hasMore });
-
-  } else {
-    const { plans, count, hasMore } = await ListPlansService({
-      searchParam: plansName,
-      pageNumber,
-      listPublic
-    });
-    return res.json({ plans, count, hasMore });
-
   }
 
+  const company = await Company.findByPk(companyId);
+  const planCompanyId = company?.planId;
+  const companyPlan = planCompanyId ? await Plan.findByPk(planCompanyId) : null;
+  const plansName = companyPlan?.name || searchParam || "";
+
+  const { plans, count, hasMore } = await ListPlansService({
+    searchParam: plansName,
+    pageNumber,
+    listPublic
+  });
+  return res.json({ plans, count, hasMore });
 };
 
 export const list = async (req: Request, res: Response): Promise<Response> => {

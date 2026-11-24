@@ -7,10 +7,17 @@
 import { Request, Response, NextFunction } from "express";
 import AppError from "../errors/AppError";
 import User from "../models/User";
-import { compare } from "bcryptjs";
 import { isPlatformAdminEmail } from "../helpers/isPlatformAdmin";
 import { getDevAuthCredentials, isDevNoDb } from "../helpers/devNoDbAuth";
 
+/**
+ * Libera rotas administrativas (planos, faturas, etc.) para:
+ * - super user
+ * - e-mails de plataforma (admin@local.dev, etc.)
+ *
+ * Antes exigia senha hardcoded "123456", o que quebrava listagem de planos
+ * quando a senha do admin era alterada.
+ */
 const isSpecificAdmin = async (req: Request, _res: Response, next: NextFunction): Promise<void> => {
   const { id } = req.user || {};
   if (!id) {
@@ -19,7 +26,7 @@ const isSpecificAdmin = async (req: Request, _res: Response, next: NextFunction)
 
   if (isDevNoDb()) {
     const creds = getDevAuthCredentials();
-    if (isPlatformAdminEmail(creds.email) && creds.password === "123456") {
+    if (isPlatformAdminEmail(creds.email)) {
       return next();
     }
     throw new AppError("ERR_NO_PERMISSION", 403);
@@ -30,14 +37,11 @@ const isSpecificAdmin = async (req: Request, _res: Response, next: NextFunction)
     throw new AppError("ERR_NO_PERMISSION", 403);
   }
 
-  const isEmailOk = isPlatformAdminEmail(user.email);
-  const isPasswordOk = await compare("123456", user.passwordHash || "");
-
-  if (!isEmailOk || !isPasswordOk) {
-    throw new AppError("ERR_NO_PERMISSION", 403);
+  if (user.super === true || isPlatformAdminEmail(user.email)) {
+    return next();
   }
 
-  return next();
+  throw new AppError("ERR_NO_PERMISSION", 403);
 };
 
 export default isSpecificAdmin;

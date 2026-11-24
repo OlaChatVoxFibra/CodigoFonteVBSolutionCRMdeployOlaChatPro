@@ -344,18 +344,21 @@ export const initWASocket = async (whatsapp: Whatsapp): Promise<Session> => {
     wsocket = makeWASocket({
       version: versionWA,
       logger: loggerBaileys,
-      printQRInTerminal: true,
+      printQRInTerminal: false,
       auth: {
         creds: state.creds,
-        /** caching makes the store faster to send/recv messages */
-        keys: state.keys,
+        /** Cache + Redis: sem isso o pairing trava em "Conectando..." no celular */
+        keys: makeCacheableSignalKeyStore(state.keys, loggerBaileys),
       },
-      browser: ["VBSolution", "Chrome", "10.0"],
-      syncFullHistory: true,
+      // Identidade WA Web válida — browser custom ("VBSolution") quebra pairing em versões recentes
+      browser: Browsers.ubuntu("Chrome"),
+      syncFullHistory: false,
+      markOnlineOnConnect: false,
       connectTimeoutMs: 60000,
       defaultQueryTimeoutMs: 60000,
-      keepAliveIntervalMs: 10000,
-      retryRequestDelayMs: 250,
+      keepAliveIntervalMs: 15000,
+      retryRequestDelayMs: 500,
+      qrTimeout: 60000,
       cachedGroupMetadata: async (jid) => {
         const cachedGroupMetadata = await getGroupMetadataCache(whatsapp.id, jid)
 
@@ -549,10 +552,22 @@ export const initWASocket = async (whatsapp: Whatsapp): Promise<Session> => {
               });
             removeWbot(id, false);
           } else if (statusCode === DisconnectReason.restartRequired || statusCode === 515) {
-            // Erro 515 (Stream Errored): Reiniciar sessão automaticamente
+            // Após scan do QR o WA fecha com 515 — precisa reiniciar MANTENDO creds no Redis
             logger.info(`[WBOT] Reiniciando sessão devido a erro 515 (Stream Errored) para ${name}`);
             removeWbot(id, false);
-            setTimeout(() => StartWhatsAppSession(whatsapp, whatsapp.companyId), 2000);
+            setTimeout(async () => {
+              try {
+                const fresh = await Whatsapp.findByPk(id);
+                if (!fresh) {
+                  logger.error(`[WBOT] 515 restart: whatsapp ${id} não encontrado`);
+                  return;
+                }
+                // NÃO limpar Redis aqui — as creds do pairing precisam persistir
+                await StartWhatsAppSession(fresh, fresh.companyId);
+              } catch (restartErr) {
+                logger.error(`[WBOT] Falha no restart 515 de ${name}: ${restartErr}`);
+              }
+            }, 1500);
           } else if (
             statusCode !== DisconnectReason.loggedOut
           ) {

@@ -9,9 +9,12 @@ import Base64 from "crypto-js/enc-base64";
 import { REDIS_URI_CONNECTION } from "../config/redis";
 
 type RedisLike = {
+  status?: string;
   set: (...args: any[]) => Promise<string | null>;
   get: (key: string) => Promise<string | null>;
   del: (...keys: string[]) => Promise<number>;
+  ping?: () => Promise<string>;
+  connect?: () => Promise<void>;
   scanStream: (opts: { match: string; count: number }) => AsyncIterable<string[]>;
   quit?: () => Promise<"OK">;
 };
@@ -24,6 +27,7 @@ function createMemoryRedis(): RedisLike {
     !!(entry?.expiresAt && Date.now() > entry.expiresAt);
 
   return {
+    status: "ready",
     async set(key: string, value: string, option?: string, optionValue?: string | number) {
       let expiresAt: number | undefined;
       if (option === "EX" && optionValue != null) {
@@ -50,6 +54,9 @@ function createMemoryRedis(): RedisLike {
       }
       return n;
     },
+    async ping() {
+      return "PONG";
+    },
     scanStream({ match }: { match: string; count: number }) {
       const pattern = new RegExp(
         `^${match.replace(/[.+^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*")}$`
@@ -73,6 +80,8 @@ class CacheSingleton {
 
   private static instance: CacheSingleton;
 
+  private readyPromise: Promise<boolean> | null = null;
+
   private constructor(redisInstance: RedisLike) {
     this.redis = redisInstance;
   }
@@ -90,12 +99,61 @@ class CacheSingleton {
     return key;
   }
 
+  /**
+   * Garante Redis pronto antes de ler/gravar sessões Baileys.
+   * Sem isso o pairing trava em "Conectando..." (creds não persistem).
+   */
+  public async ensureReady(timeoutMs = 8000): Promise<boolean> {
+    if (this.redis.status === "ready") {
+      try {
+        if (this.redis.ping) {
+          const pong = await this.redis.ping();
+          return pong === "PONG";
+        }
+        return true;
+      } catch {
+        /* tenta reconectar abaixo */
+      }
+    }
+
+    if (!this.readyPromise) {
+      this.readyPromise = (async () => {
+        try {
+          if (typeof this.redis.connect === "function" && this.redis.status !== "ready") {
+            await Promise.race([
+              this.redis.connect(),
+              new Promise((_, reject) =>
+                setTimeout(() => reject(new Error("redis connect timeout")), timeoutMs)
+              )
+            ]);
+          }
+          if (this.redis.ping) {
+            const pong = await this.redis.ping();
+            return pong === "PONG";
+          }
+          return this.redis.status === "ready";
+        } catch (err: any) {
+          console.warn(
+            "[RedisConnection] ensureReady falhou:",
+            err?.message || err
+          );
+          return false;
+        } finally {
+          this.readyPromise = null;
+        }
+      })();
+    }
+
+    return this.readyPromise;
+  }
+
   public async set(
     key: string,
     value: string,
     option?: string,
     optionValue?: string | number
   ): Promise<string | null> {
+    await this.ensureReady();
     if (option !== undefined && optionValue !== undefined) {
       return this.redis.set(key, value, option, optionValue);
     }
@@ -103,10 +161,12 @@ class CacheSingleton {
   }
 
   public async get(key: string): Promise<string | null> {
+    await this.ensureReady();
     return this.redis.get(key);
   }
 
   public async getKeys(pattern: string): Promise<string[]> {
+    await this.ensureReady();
     const stream = this.redis.scanStream({
       match: pattern,
       count: 100
@@ -119,10 +179,12 @@ class CacheSingleton {
   }
 
   public async del(key: string): Promise<number> {
+    await this.ensureReady();
     return this.redis.del(key);
   }
 
   public async delFromPattern(pattern: string): Promise<void> {
+    await this.ensureReady();
     const stream = this.redis.scanStream({
       match: pattern,
       count: 100
@@ -172,19 +234,28 @@ function createRedisClient(): RedisLike {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const Redis = require("ioredis");
     const client = new Redis(REDIS_URI_CONNECTION, {
-      maxRetriesPerRequest: 1,
-      enableOfflineQueue: false,
-      connectTimeout: 3000,
+      // Fila offline ON: pairing Baileys grava dezenas de keys — sem fila, creds somem e o celular trava em "Conectando..."
+      maxRetriesPerRequest: 3,
+      enableOfflineQueue: true,
+      connectTimeout: 10000,
       lazyConnect: true,
-      retryStrategy: () => null
+      retryStrategy: (times: number) => {
+        if (times > 20) return null;
+        return Math.min(times * 200, 3000);
+      }
     });
     client.on("error", (err: Error) => {
-      // Não derruba o processo — login/API continuam com fallback em memória se necessário
       console.warn("[RedisConnection] erro (ignorado):", err?.message || err);
+    });
+    client.on("connect", () => {
+      console.info("[RedisConnection] conectado");
+    });
+    client.on("ready", () => {
+      console.info("[RedisConnection] ready");
     });
     client.connect().catch((err: Error) => {
       console.warn(
-        "[RedisConnection] connect falhou — cache em memória:",
+        "[RedisConnection] connect inicial falhou (retry automático):",
         err?.message || err
       );
     });

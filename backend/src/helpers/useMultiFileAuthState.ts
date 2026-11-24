@@ -14,6 +14,9 @@ import { initAuthCreds } from "baileys";
 import { BufferJSON } from "baileys";
 import cacheLayer from "../libs/cache";
 import Whatsapp from "../models/Whatsapp";
+import logger from "../utils/logger";
+
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 export const useMultiFileAuthState = async (
   whatsapp: Whatsapp
@@ -23,35 +26,57 @@ export const useMultiFileAuthState = async (
     throw new Error("Whatsapp ID is missing");
   }
 
+  const redisReady = await cacheLayer.ensureReady(10000);
+  if (!redisReady) {
+    logger.error(
+      `[useMultiFileAuthState] Redis indisponível para sessão ${whatsapp.id} — pairing pode falhar`
+    );
+  }
+
   const writeData = async (data: any, file: string) => {
-    try {
-      // console.log(`[useMultiFileAuthState] Writing data for session ${whatsapp.id}: ${file}`);
-      await cacheLayer.set(
-        `sessions:${whatsapp.id}:${file}`,
-        JSON.stringify(data, BufferJSON.replacer)
-      );
-    } catch (error) {
-      console.error(`[useMultiFileAuthState] writeData error for session ${whatsapp.id} file ${file}:`, error);
-      return null;
+    const key = `sessions:${whatsapp.id}:${file}`;
+    const payload = JSON.stringify(data, BufferJSON.replacer);
+    let lastError: any;
+
+    for (let attempt = 1; attempt <= 4; attempt += 1) {
+      try {
+        await cacheLayer.set(key, payload);
+        return;
+      } catch (error) {
+        lastError = error;
+        logger.warn(
+          `[useMultiFileAuthState] writeData tentativa ${attempt}/4 falhou (${whatsapp.id}/${file}): ${
+            (error as Error)?.message || error
+          }`
+        );
+        await sleep(150 * attempt);
+        await cacheLayer.ensureReady(5000);
+      }
     }
+
+    logger.error(
+      `[useMultiFileAuthState] writeData FALHOU após retries para ${whatsapp.id}/${file}:`,
+      lastError
+    );
+    throw lastError || new Error(`Failed to persist Baileys auth key ${file}`);
   };
 
   const readData = async (file: string) => {
     try {
-      // console.log(`[useMultiFileAuthState] Reading data for session ${whatsapp.id}: ${file}`);
       const data = await cacheLayer.get(`sessions:${whatsapp.id}:${file}`);
-      // if (!data) console.log(`[useMultiFileAuthState] Data not found for session ${whatsapp.id}: ${file}`);
       if (!data) return null;
       return JSON.parse(data, BufferJSON.reviver);
     } catch (error) {
-      console.error(`[useMultiFileAuthState] readData error for session ${whatsapp.id} file ${file}:`, error);
+      console.error(
+        `[useMultiFileAuthState] readData error for session ${whatsapp.id} file ${file}:`,
+        error
+      );
       return null;
     }
   };
 
   const removeData = async (file: string) => {
     try {
-      console.log(`[useMultiFileAuthState] Removing data for session ${whatsapp.id}: ${file}`);
       await cacheLayer.del(`sessions:${whatsapp.id}:${file}`);
     } catch {}
   };
@@ -92,8 +117,8 @@ export const useMultiFileAuthState = async (
         }
       }
     },
-    saveCreds: () => {
-      return writeData(creds, "creds");
+    saveCreds: async () => {
+      await writeData(creds, "creds");
     }
   };
 };
